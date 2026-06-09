@@ -26,8 +26,8 @@
 
 package org.springdoc.core.customizers
 
-import com.fasterxml.jackson.databind.JavaType
 import org.springdoc.core.providers.ObjectMapperProvider
+import tools.jackson.databind.JavaType
 import kotlin.reflect.full.memberProperties
 
 /**

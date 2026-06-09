@@ -30,7 +30,6 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.fasterxml.jackson.databind.JavaType;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
@@ -38,6 +37,7 @@ import org.springdoc.core.providers.ObjectMapperProvider;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.JavaType;
 
 @Component
 public class PropertyCustomizer implements org.springdoc.core.customizers.PropertyCustomizer {

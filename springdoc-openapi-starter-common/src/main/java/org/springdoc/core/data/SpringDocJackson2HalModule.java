@@ -1,9 +1,5 @@
 package org.springdoc.core.data;
 
-import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.RepresentationModel;
@@ -11,6 +7,9 @@ import org.springframework.hateoas.mediatype.hal.CollectionModelMixin;
 import org.springframework.hateoas.mediatype.hal.LinkMixin;
 import org.springframework.hateoas.mediatype.hal.RepresentationModelMixin;
 import org.springframework.util.Assert;
+import tools.jackson.core.Version;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.module.SimpleModule;
 
 /**
  * Jackson 2 module implementation
@@ -41,11 +40,8 @@ public class SpringDocJackson2HalModule extends SimpleModule {
 	 * @return the boolean
 	 */
 	public static boolean isAlreadyRegisteredIn(ObjectMapper mapper) {
-
 		Assert.notNull(mapper, "ObjectMapper must not be null!");
-		return LinkMixin.class.equals(mapper.findMixInClassFor(Link.class));
+		return LinkMixin.class.equals(mapper.serializationConfig().findMixInClassFor(Link.class));
 	}
-	
-
 
 }

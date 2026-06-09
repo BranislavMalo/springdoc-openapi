@@ -38,7 +38,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.core.util.PathUtils;
 import io.swagger.v3.oas.models.OpenAPI;
 import jakarta.servlet.http.HttpServletRequest;
@@ -65,6 +64,7 @@ import org.springframework.util.MimeType;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
+import tools.jackson.core.JacksonException;
 
 import static org.springdoc.core.providers.ActuatorProvider.getTag;
 import static org.springdoc.core.utils.Constants.DEFAULT_GROUP_NAME;
@@ -120,11 +120,11 @@ public abstract class OpenApiResource extends AbstractOpenApiResource {
 	 * @param apiDocsUrl the api docs url
 	 * @param locale     the locale
 	 * @return the string
-	 * @throws JsonProcessingException the json processing exception
+	 * @throws JacksonException the Jackson Exception
 	 */
 	public byte[] openapiJson(HttpServletRequest request,
 			String apiDocsUrl, Locale locale)
-			throws JsonProcessingException {
+			throws JacksonException {
 		String serverBaseUrl = calculateServerUrl(request, apiDocsUrl, locale);
 		OpenAPI openAPI = this.getOpenApi(serverBaseUrl, locale);
 		return writeJsonValue(openAPI);
@@ -137,11 +137,11 @@ public abstract class OpenApiResource extends AbstractOpenApiResource {
 	 * @param apiDocsUrl the api docs url
 	 * @param locale     the locale
 	 * @return the string
-	 * @throws JsonProcessingException the json processing exception
+	 * @throws JacksonException the Jackson Exception
 	 */
 	public byte[] openapiYaml(HttpServletRequest request,
 			String apiDocsUrl, Locale locale)
-			throws JsonProcessingException {
+			throws JacksonException {
 		String serverBaseUrl = calculateServerUrl(request, apiDocsUrl, locale);
 		OpenAPI openAPI = this.getOpenApi(serverBaseUrl, locale);
 		return writeYamlValue(openAPI);

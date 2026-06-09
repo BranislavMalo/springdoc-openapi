@@ -26,9 +26,6 @@
 
 package org.springdoc.core.providers;
 
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.core.util.Json31;
 import io.swagger.v3.core.util.ObjectMapperFactory;
@@ -37,6 +34,9 @@ import io.swagger.v3.core.util.Yaml31;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.core.util.PrimitiveType;
 import io.swagger.v3.oas.models.media.Schema;
+import org.springdoc.core.configuration.SpringDocRequiredModule;
+import org.springdoc.core.configuration.SpringDocSealedClassModule;
+import org.springdoc.core.data.SpringDocJackson2HalModule;
 import org.springdoc.core.mixins.SchemaTypeMixin;
 import org.springdoc.core.mixins.SortedOpenAPIMixin;
 import org.springdoc.core.mixins.SortedOpenAPIMixin31;
@@ -44,6 +44,9 @@ import org.springdoc.core.mixins.SortedSchemaMixin;
 import org.springdoc.core.mixins.SortedSchemaMixin31;
 import org.springdoc.core.properties.SpringDocConfigProperties;
 import org.springdoc.core.properties.SpringDocConfigProperties.ApiDocs.OpenApiVersion;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
 
 /**
  * The type Spring doc object mapper provider.
@@ -71,27 +74,82 @@ public class ObjectMapperProvider extends ObjectMapperFactory {
 	 * @param springDocConfigProperties the spring doc config properties
 	 */
 	public ObjectMapperProvider(SpringDocConfigProperties springDocConfigProperties) {
+		this(
+				springDocConfigProperties,
+				createJsonMapper(springDocConfigProperties),
+				createYamlMapper(springDocConfigProperties)
+		);
+	}
+
+	public ObjectMapperProvider(
+			SpringDocConfigProperties springDocConfigProperties,
+			ObjectMapper jsonMapper,
+			ObjectMapper yamlMapper) {
+
 		this.springDocConfigProperties = springDocConfigProperties;
-		OpenApiVersion openApiVersion = springDocConfigProperties.getApiDocs().getVersion();
+		this.jsonMapper = jsonMapper;
+		this.yamlMapper = yamlMapper;
+
+		configureOpenApiVersion(springDocConfigProperties);
+	}
+
+	private static ObjectMapper createJsonMapper(SpringDocConfigProperties properties) {
+		ObjectMapper mapper = properties.getApiDocs().getVersion() == OpenApiVersion.OPENAPI_3_1
+				? Json31.mapper()
+				: Json.mapper();
+
+		var builder = mapper.rebuild()
+				.addModule(new SpringDocRequiredModule())
+				.addModule(new SpringDocSealedClassModule());
+		if (properties.getApiDocs().getVersion() == OpenApiVersion.OPENAPI_3_1)
+			builder.addMixIn(Schema.class, SchemaTypeMixin.class);
+		mapper = builder.build();
+
+		if (properties.isWriterWithOrderByKeys()) {
+			mapper = sortOutput(mapper, properties);
+		}
+
+		return mapper;
+	}
+
+	private static ObjectMapper createYamlMapper(SpringDocConfigProperties properties) {
+		ObjectMapper mapper = properties.getApiDocs().getVersion() == OpenApiVersion.OPENAPI_3_1
+				? Yaml31.mapper()
+				: Yaml.mapper();
+
+		if (properties.isWriterWithOrderByKeys()) {
+			mapper = sortOutput(mapper, properties);
+		}
+
+		return mapper;
+	}
+
+	private static void configureOpenApiVersion(SpringDocConfigProperties properties) {
+		OpenApiVersion openApiVersion = properties.getApiDocs().getVersion();
+
 		if (openApiVersion == OpenApiVersion.OPENAPI_3_1) {
-			jsonMapper = Json31.mapper();
-			yamlMapper = Yaml31.mapper();
-			jsonMapper.addMixIn(Schema.class, SchemaTypeMixin.class);
-			if (springDocConfigProperties.isUseArbitrarySchemas()) {
+			if (properties.isUseArbitrarySchemas()) {
 				System.setProperty(Schema.USE_ARBITRARY_SCHEMA_PROPERTY, "true");
 			}
-			if (springDocConfigProperties.isExplicitObjectSchema()) {
+
+			if (properties.isExplicitObjectSchema()) {
 				System.setProperty(Schema.EXPLICIT_OBJECT_SCHEMA_PROPERTY, "true");
-			}
-			else {
+			} else {
 				PrimitiveType.explicitObjectType = false;
 			}
-		}
-		else {
-			jsonMapper = Json.mapper();
-			yamlMapper = Yaml.mapper();
+		} else {
 			PrimitiveType.explicitObjectType = null;
 		}
+	}
+
+	public static ObjectMapper applySpringDocJackson2HalModule(ObjectMapper mapper) {
+		if (SpringDocJackson2HalModule.isAlreadyRegisteredIn(mapper)) {
+			return mapper;
+		}
+
+		return mapper.rebuild()
+				.addModule(new SpringDocJackson2HalModule())
+				.build();
 	}
 
 	/**
@@ -104,14 +162,15 @@ public class ObjectMapperProvider extends ObjectMapperFactory {
 		OpenApiVersion openApiVersion = springDocConfigProperties.getApiDocs().getVersion();
 		ObjectMapper objectMapper;
 		if (openApiVersion == OpenApiVersion.OPENAPI_3_1) {
-			objectMapper = ObjectMapperFactory.createJson31();
-			objectMapper.addMixIn(Schema.class, SchemaTypeMixin.class);
+			objectMapper = ObjectMapperFactory.createJson31().rebuild()
+					.addMixIn(Schema.class, SchemaTypeMixin.class)
+					.build();
 		}
 		else
 			objectMapper = ObjectMapperFactory.createJson();
 
 		if (springDocConfigProperties.isWriterWithOrderByKeys())
-			sortOutput(objectMapper, springDocConfigProperties);
+			objectMapper = sortOutput(objectMapper, springDocConfigProperties);
 
 		return objectMapper;
 	}
@@ -122,17 +181,23 @@ public class ObjectMapperProvider extends ObjectMapperFactory {
 	 * @param objectMapper              the object mapper
 	 * @param springDocConfigProperties the spring doc config properties
 	 */
-	public static void sortOutput(ObjectMapper objectMapper, SpringDocConfigProperties springDocConfigProperties) {
-		objectMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
-		objectMapper.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
+	public static ObjectMapper sortOutput(
+			ObjectMapper objectMapper,
+			SpringDocConfigProperties springDocConfigProperties) {
+
+		var builder = objectMapper.rebuild()
+				.enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+				.enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY);
+
 		if (OpenApiVersion.OPENAPI_3_1 == springDocConfigProperties.getApiDocs().getVersion()) {
-			objectMapper.addMixIn(OpenAPI.class, SortedOpenAPIMixin31.class);
-			objectMapper.addMixIn(Schema.class, SortedSchemaMixin31.class);
+			builder.addMixIn(OpenAPI.class, SortedOpenAPIMixin31.class);
+			builder.addMixIn(Schema.class, SortedSchemaMixin31.class);
+		} else {
+			builder.addMixIn(OpenAPI.class, SortedOpenAPIMixin.class);
+			builder.addMixIn(Schema.class, SortedSchemaMixin.class);
 		}
-		else {
-			objectMapper.addMixIn(OpenAPI.class, SortedOpenAPIMixin.class);
-			objectMapper.addMixIn(Schema.class, SortedSchemaMixin.class);
-		}
+
+		return builder.build();
 	}
 
 	/**

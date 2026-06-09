@@ -33,7 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.JavaType;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverterContext;
@@ -43,6 +42,7 @@ import org.springdoc.core.providers.ObjectMapperProvider;
 
 import org.springframework.core.ResolvableType;
 import org.springframework.data.web.PagedModel;
+import tools.jackson.databind.JavaType;
 
 /**
  * The Spring Data Page type model converter.

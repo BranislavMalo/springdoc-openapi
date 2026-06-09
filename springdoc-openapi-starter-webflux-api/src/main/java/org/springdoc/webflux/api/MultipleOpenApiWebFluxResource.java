@@ -29,7 +29,6 @@ package org.springdoc.webflux.api;
 import java.util.List;
 import java.util.Locale;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springdoc.core.customizers.SpringDocCustomizers;
 import org.springdoc.core.models.GroupedOpenApi;
@@ -48,6 +47,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import tools.jackson.core.JacksonException;
 
 import static org.springdoc.core.utils.Constants.API_DOCS_URL;
 import static org.springdoc.core.utils.Constants.APPLICATION_OPENAPI_YAML;
@@ -88,13 +88,13 @@ public class MultipleOpenApiWebFluxResource extends MultipleOpenApiResource {
 	 * @param group             the group
 	 * @param locale            the locale
 	 * @return the mono
-	 * @throws JsonProcessingException the json processing exception
+	 * @throws JacksonException the Jackson Exception
 	 */
 	@Operation(hidden = true)
 	@GetMapping(value = API_DOCS_URL + "/{group}", produces = MediaType.APPLICATION_JSON_VALUE)
 	public Mono<byte[]> openapiJson(ServerHttpRequest
 			serverHttpRequest, @Value(API_DOCS_URL) String apiDocsUrl, @PathVariable String
-			group, Locale locale) throws JsonProcessingException {
+			group, Locale locale) throws JacksonException {
 		return getOpenApiResourceOrThrow(group).openapiJson(serverHttpRequest, apiDocsUrl + DEFAULT_PATH_SEPARATOR + group, locale);
 	}
 
@@ -106,13 +106,13 @@ public class MultipleOpenApiWebFluxResource extends MultipleOpenApiResource {
 	 * @param group             the group
 	 * @param locale            the locale
 	 * @return the mono
-	 * @throws JsonProcessingException the json processing exception
+	 * @throws JacksonException the Jackson Exception
 	 */
 	@Operation(hidden = true)
 	@GetMapping(value = DEFAULT_API_DOCS_URL_YAML + "/{group}", produces = APPLICATION_OPENAPI_YAML)
 	public Mono<byte[]> openapiYaml(ServerHttpRequest serverHttpRequest,
 			@Value(DEFAULT_API_DOCS_URL_YAML) String apiDocsUrl, @PathVariable String
-			group, Locale locale) throws JsonProcessingException {
+			group, Locale locale) throws JacksonException {
 		return getOpenApiResourceOrThrow(group).openapiYaml(serverHttpRequest, apiDocsUrl + DEFAULT_PATH_SEPARATOR + group, locale);
 	}
 

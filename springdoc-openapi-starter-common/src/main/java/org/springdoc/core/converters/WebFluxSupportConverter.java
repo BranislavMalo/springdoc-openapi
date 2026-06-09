@@ -28,8 +28,6 @@ package org.springdoc.core.converters;
 
 import java.util.Iterator;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.type.ArrayType;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverterContext;
@@ -38,6 +36,8 @@ import io.swagger.v3.oas.models.media.StringSchema;
 import org.reactivestreams.Publisher;
 import org.springdoc.core.providers.ObjectMapperProvider;
 import reactor.core.publisher.Flux;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.type.ArrayType;
 
 import static org.springdoc.core.converters.ConverterUtils.isFluxTypeWrapper;
 import static org.springdoc.core.converters.ConverterUtils.isResponseTypeWrapper;

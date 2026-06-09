@@ -28,7 +28,6 @@ package org.springdoc.core.configuration.hints;
 
 import java.util.Arrays;
 
-import com.fasterxml.jackson.databind.BeanDescription;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.filter.SpecFilter;
 import io.swagger.v3.core.jackson.ApiResponsesSerializer;
@@ -84,6 +83,7 @@ import org.springdoc.core.properties.SwaggerUiConfigProperties;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
+import tools.jackson.databind.BeanDescription;
 
 /**
  * The type Spring doc hints.
