@@ -26,7 +26,6 @@ package test.org.springdoc.api.v31.app157;
 
 import java.util.Iterator;
 
-import com.fasterxml.jackson.databind.JavaType;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverterContext;
@@ -35,6 +34,7 @@ import org.springdoc.core.providers.ObjectMapperProvider;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.JavaType;
 
 @Component
 public class StringyConverter implements ModelConverter {

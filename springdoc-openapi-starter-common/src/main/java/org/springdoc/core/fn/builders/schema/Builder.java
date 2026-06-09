@@ -40,6 +40,8 @@ import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import io.swagger.v3.oas.annotations.media.Schema.SchemaResolution;
 import org.apache.commons.lang3.ArrayUtils;
 
+import static org.springdoc.core.configuration.SpringDocRequiredModule.DEFAULT_SENTINEL;
+
 /**
  * The type Schema builder.
  *
@@ -197,7 +199,7 @@ public class Builder {
 	/**
 	 * Provides a default value.
 	 */
-	private String defaultValue = Schema.DEFAULT_SENTINEL;
+	private String defaultValue = DEFAULT_SENTINEL;
 
 	/**
 	 * Provides a discriminator property value.

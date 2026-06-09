@@ -36,7 +36,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.core.util.PathUtils;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.springdoc.api.AbstractOpenApiResource;
@@ -60,6 +59,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.result.method.RequestMappingInfo;
+import tools.jackson.core.JacksonException;
 
 import static org.springdoc.core.providers.ActuatorProvider.getTag;
 import static org.springdoc.core.utils.Constants.DEFAULT_GROUP_NAME;
@@ -116,10 +116,10 @@ public abstract class OpenApiResource extends AbstractOpenApiResource {
 	 * @param apiDocsUrl        the api docs url
 	 * @param locale            the locale
 	 * @return the mono
-	 * @throws JsonProcessingException the json processing exception
+	 * @throws JacksonException the Jackson Exception
 	 */
 	protected Mono<byte[]> openapiJson(ServerHttpRequest serverHttpRequest, String apiDocsUrl, Locale locale)
-			throws JsonProcessingException {
+			throws JacksonException {
 		String serverBaseUrl = calculateServerUrl(serverHttpRequest, apiDocsUrl, locale);
 		OpenAPI openAPI = this.getOpenApi(serverBaseUrl, locale);
 		return Mono.just(writeJsonValue(openAPI));
@@ -132,10 +132,10 @@ public abstract class OpenApiResource extends AbstractOpenApiResource {
 	 * @param apiDocsUrl        the api docs url
 	 * @param locale            the locale
 	 * @return the mono
-	 * @throws JsonProcessingException the json processing exception
+	 * @throws JacksonException the Jackson Exception
 	 */
 	protected Mono<byte[]> openapiYaml(ServerHttpRequest serverHttpRequest, String apiDocsUrl, Locale locale)
-			throws JsonProcessingException {
+			throws JacksonException {
 		String serverBaseUrl = calculateServerUrl(serverHttpRequest, apiDocsUrl, locale);
 		OpenAPI openAPI = this.getOpenApi(serverBaseUrl, locale);
 		return Mono.just(writeYamlValue(openAPI));

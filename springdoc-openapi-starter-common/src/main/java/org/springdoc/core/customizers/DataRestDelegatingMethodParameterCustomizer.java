@@ -34,7 +34,6 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.core.util.ObjectMapperFactory;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -61,6 +60,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
+import tools.jackson.core.JacksonException;
 
 /**
  * The type Data rest delegating method parameter customizer.
@@ -69,6 +69,8 @@ import org.springframework.data.web.SortDefault;
  * @author pheyken
  */
 public class DataRestDelegatingMethodParameterCustomizer implements DelegatingMethodParameterCustomizer {
+
+	private static final String DEFAULT_SENTINEL = "##default";
 
 	/**
 	 * The constant LOGGER.
@@ -367,7 +369,7 @@ public class DataRestDelegatingMethodParameterCustomizer implements DelegatingMe
 						@Override
 						public String defaultValue() {
 							String defaultValue = getDefaultValue(parameterName, pageableDefault, parameterSchema.defaultValue());
-						return defaultValue != null ? defaultValue : io.swagger.v3.oas.annotations.media.Schema.DEFAULT_SENTINEL;
+						return defaultValue != null ? defaultValue : DEFAULT_SENTINEL;
 						}
 
 						@Override
@@ -759,7 +761,7 @@ public class DataRestDelegatingMethodParameterCustomizer implements DelegatingMe
 								@Override
 								public String defaultValue() {
 									String defaultValue = getArrayDefaultValue(parameterName, pageableDefault, sortDefault, schema.defaultValue());
-									return defaultValue != null ? defaultValue : io.swagger.v3.oas.annotations.media.Schema.DEFAULT_SENTINEL;
+									return defaultValue != null ? defaultValue : DEFAULT_SENTINEL;
 								}
 
 								@Override
@@ -1188,7 +1190,7 @@ public class DataRestDelegatingMethodParameterCustomizer implements DelegatingMe
 				try {
 					defaultValue = ObjectMapperFactory.buildStrictGenericObjectMapper().writeValueAsString(sortValues);
 				}
-				catch (JsonProcessingException e) {
+				catch (JacksonException e) {
 					LOGGER.warn(e.getMessage());
 				}
 			}

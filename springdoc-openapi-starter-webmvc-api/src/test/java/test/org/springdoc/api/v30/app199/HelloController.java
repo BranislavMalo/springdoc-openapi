@@ -45,7 +45,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class HelloController {
 
 	@Autowired
-	ObjectMapperProvider objectMapperProvider;
+    ObjectMapperProvider objectMapperProvider;
 
 	@GetMapping(
 			value = "/first",

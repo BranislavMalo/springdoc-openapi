@@ -29,9 +29,6 @@ package org.springdoc.core.providers;
 import java.util.List;
 import java.util.Optional;
 
-import org.springdoc.core.data.SpringDocJackson2HalModule;
-
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -39,12 +36,8 @@ import org.springframework.util.ReflectionUtils;
  *
  * @author bnasslahsen
  */
-public class HateoasHalProvider implements InitializingBean {
+public class HateoasHalProvider {
 
-	/**
-	 * The Object mapper provider.
-	 */
-	protected final ObjectMapperProvider objectMapperProvider;
 
 	/**
 	 * The Hateoas properties optional.
@@ -55,11 +48,9 @@ public class HateoasHalProvider implements InitializingBean {
 	 * Instantiates a new Hateoas hal provider.
 	 *
 	 * @param hateoasPropertiesOptional the hateoas properties optional
-	 * @param objectMapperProvider      the object mapper provider
 	 */
-	public HateoasHalProvider(Optional<?> hateoasPropertiesOptional, ObjectMapperProvider objectMapperProvider) {
+	public HateoasHalProvider(Optional<?> hateoasPropertiesOptional) {
 		this.hateoasPropertiesOptional = hateoasPropertiesOptional;
-		this.objectMapperProvider = objectMapperProvider;
 	}
 
 	private static boolean isHalEnabled(Object hateoasProperties) {
@@ -93,17 +84,4 @@ public class HateoasHalProvider implements InitializingBean {
 				.orElse(true);
 	}
 
-	/**
-	 * After Properties Set.
-	 */
-	@Override
-	public void afterPropertiesSet() {
-		if (!isHalEnabled()) {
-			return;
-		}
-		var mapper = objectMapperProvider.jsonMapper();
-		if (!SpringDocJackson2HalModule.isAlreadyRegisteredIn(mapper)) {
-			mapper.registerModule(new SpringDocJackson2HalModule());
-		}
-	}
 }

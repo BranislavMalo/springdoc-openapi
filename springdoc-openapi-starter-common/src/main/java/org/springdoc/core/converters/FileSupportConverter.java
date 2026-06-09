@@ -29,13 +29,13 @@ package org.springdoc.core.converters;
 
 import java.util.Iterator;
 
-import com.fasterxml.jackson.databind.JavaType;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverterContext;
 import io.swagger.v3.oas.models.media.FileSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import org.springdoc.core.providers.ObjectMapperProvider;
+import tools.jackson.databind.JavaType;
 
 import static org.springdoc.core.service.GenericParameterService.isFile;
 

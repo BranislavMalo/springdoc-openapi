@@ -29,7 +29,6 @@ package org.springdoc.core.converters;
 import java.lang.reflect.Type;
 import java.util.Iterator;
 
-import com.fasterxml.jackson.databind.JavaType;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverterContext;
@@ -38,6 +37,7 @@ import org.springdoc.core.providers.ObjectMapperProvider;
 
 import org.springframework.core.ResolvableType;
 import org.springframework.data.web.PagedModel;
+import tools.jackson.databind.JavaType;
 
 import static org.springdoc.core.utils.SpringDocUtils.getParentTypeName;
 

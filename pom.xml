@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.springdoc</groupId>
+	<groupId>io.github.branislavmalo</groupId>
 	<artifactId>springdoc-openapi</artifactId>
-	<version>3.0.4-SNAPSHOT</version>
+	<version>3.0.3-jackson3</version>
 	<packaging>pom</packaging>
 	<name>Spring openapi documentation</name>
 	<description>Spring openapi documentation</description>
@@ -31,10 +31,9 @@
 	</developers>
 
 	<scm>
-		<url>git@github.com:springdoc/springdoc-openapi.git</url>
-		<connection>scm:git:git@github.com:springdoc/springdoc-openapi.git</connection>
-		<developerConnection>scm:git:git@github.com:springdoc/springdoc-openapi.git
-		</developerConnection>
+		<url>https://github.com/BranislavMalo/springdoc-openapi</url>
+		<connection>scm:git:https://github.com/BranislavMalo/springdoc-openapi.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/BranislavMalo/springdoc-openapi.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 
@@ -55,11 +54,12 @@
 	<properties>
 		<maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
 		<maven-release-plugin.version>2.5.3</maven-release-plugin.version>
-		<central-publishing-maven-plugin.version>0.7.0
+		<central-publishing-maven-plugin.version>0.10.0
 		</central-publishing-maven-plugin.version>
 		<flatten-maven-plugin.version>1.5.0</flatten-maven-plugin.version>
 		<swagger-api.version>2.2.47</swagger-api.version>
 		<swagger-ui.version>5.32.2</swagger-ui.version>
+		<jackson-module-kotlin.version>3.1.4</jackson-module-kotlin.version>
 		<gmavenplus-plugin.version>1.13.1</gmavenplus-plugin.version>
 		<jjwt.version>0.9.1</jjwt.version>
 		<therapi-runtime-javadoc.version>0.15.0</therapi-runtime-javadoc.version>
@@ -73,21 +73,32 @@
 		<skip.npm>true</skip.npm>
 		<frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
 		<node.version>v22.14.0</node.version>
+		<kotlin.version>2.1.0</kotlin.version>
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
 			<!-- swagger dependencies -->
 			<dependency>
-				<groupId>io.swagger.core.v3</groupId>
-				<artifactId>swagger-core-jakarta</artifactId>
-				<version>${swagger-api.version}</version>
+				<groupId>io.github.vpelikh</groupId>
+				<artifactId>swagger-core</artifactId>
+				<version>3.0.0-RC2</version>
 			</dependency>
+<!--			<dependency>-->
+<!--				<groupId>io.swagger.core.v3</groupId>-->
+<!--				<artifactId>swagger-core-jakarta</artifactId>-->
+<!--				<version>${swagger-api.version}</version>-->
+<!--			</dependency>-->
 			<!-- swagger ui -->
 			<dependency>
 				<groupId>org.webjars</groupId>
 				<artifactId>swagger-ui</artifactId>
 				<version>${swagger-ui.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>tools.jackson.module</groupId>
+				<artifactId>jackson-module-kotlin</artifactId>
+				<version>${jackson-module-kotlin.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.jsonwebtoken</groupId>
@@ -277,8 +288,8 @@
 						<extensions>true</extensions>
 						<configuration>
 							<publishingServerId>central</publishingServerId>
-							<autoPublish>true</autoPublish>
-							<waitUntil>published</waitUntil>
+							<autoPublish>false</autoPublish>
+<!--							<waitUntil>published</waitUntil>-->
 							<skipPublishing>${skipPublishing}</skipPublishing>
 						</configuration>
 					</plugin>

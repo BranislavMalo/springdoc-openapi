@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>org.springdoc</groupId>
+		<groupId>io.github.branislavmalo</groupId>
 		<artifactId>springdoc-openapi</artifactId>
-		<version>3.0.4-SNAPSHOT</version>
+		<version>3.0.3-jackson3</version>
 	</parent>
 	<artifactId>springdoc-openapi-starter-common</artifactId>
 	<name>${project.artifactId}</name>
@@ -21,8 +21,9 @@
 			<artifactId>spring-boot-validation</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.swagger.core.v3</groupId>
-			<artifactId>swagger-core-jakarta</artifactId>
+			<groupId>io.github.vpelikh</groupId>
+			<artifactId>swagger-core</artifactId>
+			<version>3.0.0-RC2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -33,6 +34,10 @@
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>io.swagger.core.v3</groupId>-->
+<!--			<artifactId>swagger-core-jakarta</artifactId>-->
+<!--		</dependency>-->
 		<!-- Actuator dependencies -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -80,9 +85,8 @@
 		</dependency>
 		<!-- Kotlin -->
 		<dependency>
-			<groupId>com.fasterxml.jackson.module</groupId>
+			<groupId>tools.jackson.module</groupId>
 			<artifactId>jackson-module-kotlin</artifactId>
-			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains.kotlin</groupId>
@@ -141,7 +145,7 @@
 				<configuration>
 					<archive>
 						<manifestEntries>
-							<Automatic-Module-Name>org.springdoc.openapi.common
+							<Automatic-Module-Name>io.github.branislavmalo.openapi.common
 							</Automatic-Module-Name>
 						</manifestEntries>
 					</archive>

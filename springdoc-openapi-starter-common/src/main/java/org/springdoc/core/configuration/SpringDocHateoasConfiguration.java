@@ -33,6 +33,7 @@ import org.springdoc.core.converters.HateoasLinksConverter;
 import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
 import org.springdoc.core.customizers.OpenApiHateoasLinksCustomizer;
 import org.springdoc.core.properties.SpringDocConfigProperties;
+import org.springdoc.core.providers.DataRestHalProvider;
 import org.springdoc.core.providers.HateoasHalProvider;
 import org.springdoc.core.providers.ObjectMapperProvider;
 import org.springdoc.core.utils.Constants;
@@ -47,6 +48,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.hateoas.server.LinkRelationProvider;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * The type Spring doc hateoas configuration.
@@ -65,14 +67,13 @@ public class SpringDocHateoasConfiguration {
 	 * Hateoas hal provider hateoas hal provider.
 	 *
 	 * @param hateoasPropertiesOptional the hateoas properties optional
-	 * @param objectMapperProvider      the object mapper provider
 	 * @return the hateoas hal provider
 	 */
 	@Bean
 	@ConditionalOnMissingBean
 	@Lazy(false)
-	HateoasHalProvider hateoasHalProvider(Optional<HateoasProperties> hateoasPropertiesOptional, ObjectMapperProvider objectMapperProvider) {
-		return new HateoasHalProvider(hateoasPropertiesOptional, objectMapperProvider);
+	HateoasHalProvider hateoasHalProvider(Optional<HateoasProperties> hateoasPropertiesOptional) {
+		return new HateoasHalProvider(hateoasPropertiesOptional);
 	}
 
 	/**
@@ -119,6 +120,36 @@ public class SpringDocHateoasConfiguration {
 	@Lazy(false)
 	HateoasLinksConverter hateoasLinksConverter(ObjectMapperProvider springDocObjectMapper) {
 		return new HateoasLinksConverter(springDocObjectMapper);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	ObjectMapperProvider springdocDocObjectMapper(
+			SpringDocConfigProperties springDocConfigProperties,
+			Optional<HateoasHalProvider> hateoasHalProvider,
+			Optional<DataRestHalProvider> dataRestHalProvider) {
+
+		ObjectMapperProvider provider = new ObjectMapperProvider(springDocConfigProperties);
+
+		ObjectMapper jsonMapper = provider.jsonMapper();
+
+		boolean halEnabled = hateoasHalProvider
+				.map(HateoasHalProvider::isHalEnabled)
+				.orElse(false);
+
+		boolean dataRestHalEnabled = dataRestHalProvider
+				.map(DataRestHalProvider::isHalEnabled)
+				.orElse(false);
+
+		if (halEnabled || dataRestHalEnabled) {
+			jsonMapper = ObjectMapperProvider.applySpringDocJackson2HalModule(jsonMapper);
+		}
+
+		return new ObjectMapperProvider(
+				springDocConfigProperties,
+				jsonMapper,
+				provider.yamlMapper()
+		);
 	}
 
 }

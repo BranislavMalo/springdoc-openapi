@@ -32,8 +32,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.models.OpenAPI;
 import org.junit.jupiter.api.Test;
 import org.springdoc.ai.properties.SpringDocAiProperties;
@@ -48,6 +46,8 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -169,14 +169,14 @@ class McpEndToEndTest {
 		String inputSchema = getUserTool.getToolDefinition().inputSchema();
 		JsonNode schema = objectMapper.readTree(inputSchema);
 
-		assertThat(schema.get("type").asText()).isEqualTo("object");
+		assertThat(schema.get("type").asString()).isEqualTo("object");
 		assertThat(schema.has("properties")).isTrue();
 		assertThat(schema.get("properties").has("id")).isTrue();
 
 		// id should be required (it's a path variable)
 		boolean idRequired = false;
 		for (JsonNode req : schema.get("required")) {
-			if ("id".equals(req.asText())) {
+			if ("id".equals(req.asString())) {
 				idRequired = true;
 			}
 		}

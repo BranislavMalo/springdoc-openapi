@@ -171,7 +171,7 @@ public class SpringRepositoryRestResourceProvider implements RepositoryRestResou
 	 * @param springDocDataRestUtils         the spring doc data rest utils
 	 */
 	public SpringRepositoryRestResourceProvider(DataRestRouterOperationService dataRestRouterOperationService,
-			ObjectMapper mapper, SpringDocDataRestUtils springDocDataRestUtils) {
+	                                            ObjectMapper mapper, SpringDocDataRestUtils springDocDataRestUtils) {
 		this.dataRestRouterOperationService = dataRestRouterOperationService;
 		this.mapper = mapper;
 		this.springDocDataRestUtils = springDocDataRestUtils;
@@ -306,7 +306,7 @@ public class SpringRepositoryRestResourceProvider implements RepositoryRestResou
 					handlerMappingList = (List<HandlerMapping>) MethodUtils.invokeMethod(object, "getDelegates");
 				}
 				catch (NoSuchMethodException | IllegalAccessException |
-					   InvocationTargetException e) {
+				       InvocationTargetException e) {
 					LOGGER.warn(e.getMessage());
 				}
 			}
@@ -326,7 +326,7 @@ public class SpringRepositoryRestResourceProvider implements RepositoryRestResou
 	 * @param associations        the associations
 	 */
 	private void findSearchResourceMappings(OpenAPI openAPI, List<RouterOperation> routerOperationList, List<HandlerMapping> handlerMappingList,
-			DataRestRepository dataRestRepository, ResourceMetadata resourceMetadata, Associations associations) {
+	                                        DataRestRepository dataRestRepository, ResourceMetadata resourceMetadata, Associations associations) {
 		for (HandlerMapping handlerMapping : handlerMappingList) {
 			if (handlerMapping instanceof RepositoryRestHandlerMapping repositoryRestHandlerMapping) {
 				Map<RequestMappingInfo, HandlerMethod> handlerMethodMap = repositoryRestHandlerMapping.getHandlerMethods();
@@ -357,8 +357,8 @@ public class SpringRepositoryRestResourceProvider implements RepositoryRestResou
 	 * @return the list
 	 */
 	private List<RouterOperation> findSearchControllers(List<RouterOperation> routerOperationList,
-			Map<RequestMappingInfo, HandlerMethod> handlerMethodMap, ResourceMetadata resourceMetadata, DataRestRepository dataRestRepository,
-			OpenAPI openAPI, SearchResourceMappings searchResourceMappings) {
+	                                                    Map<RequestMappingInfo, HandlerMethod> handlerMethodMap, ResourceMetadata resourceMetadata, DataRestRepository dataRestRepository,
+	                                                    OpenAPI openAPI, SearchResourceMappings searchResourceMappings) {
 		Stream<MethodResourceMapping> methodResourceMappingStream = searchResourceMappings.getExportedMappings();
 		methodResourceMappingStream.forEach(methodResourceMapping -> dataRestRouterOperationService.buildSearchRouterOperationList(
 				routerOperationList, handlerMethodMap, resourceMetadata, dataRestRepository, openAPI, methodResourceMapping));
@@ -377,8 +377,8 @@ public class SpringRepositoryRestResourceProvider implements RepositoryRestResou
 	 * @return the list
 	 */
 	private List<RouterOperation> findControllers(List<RouterOperation> routerOperationList,
-			Map<RequestMappingInfo, HandlerMethod> handlerMethodMap, ResourceMetadata resourceMetadata,
-			DataRestRepository dataRestRepository, OpenAPI openAPI) {
+	                                              Map<RequestMappingInfo, HandlerMethod> handlerMethodMap, ResourceMetadata resourceMetadata,
+	                                              DataRestRepository dataRestRepository, OpenAPI openAPI) {
 		dataRestRouterOperationService.buildEntityRouterOperationList(routerOperationList, handlerMethodMap, resourceMetadata,
 				dataRestRepository, openAPI);
 		return routerOperationList;

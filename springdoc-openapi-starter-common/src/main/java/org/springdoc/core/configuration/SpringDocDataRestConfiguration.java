@@ -38,7 +38,6 @@ import org.springdoc.core.data.DataRestTagsService;
 import org.springdoc.core.discoverer.SpringDocParameterNameDiscoverer;
 import org.springdoc.core.properties.SpringDocConfigProperties;
 import org.springdoc.core.providers.DataRestHalProvider;
-import org.springdoc.core.providers.ObjectMapperProvider;
 import org.springdoc.core.providers.SpringRepositoryRestResourceProvider;
 import org.springdoc.core.service.AbstractRequestService;
 import org.springdoc.core.service.GenericResponseService;
@@ -101,7 +100,6 @@ public class SpringDocDataRestConfiguration {
 		 *
 		 * @param repositoryRestConfiguration the repository rest configuration
 		 * @param hateoasPropertiesOptional the hateoas properties optional
-		 * @param objectMapperProvider the object mapper provider
 		 * @return the data rest hal provider
 		 */
 		@Bean
@@ -109,9 +107,8 @@ public class SpringDocDataRestConfiguration {
 		@Primary
 		@Lazy(false)
 		DataRestHalProvider halProvider(Optional<RepositoryRestConfiguration> repositoryRestConfiguration,
-				Optional<HateoasProperties> hateoasPropertiesOptional, ObjectMapperProvider objectMapperProvider) {
-			return new DataRestHalProvider(repositoryRestConfiguration, hateoasPropertiesOptional,
-					objectMapperProvider);
+				Optional<HateoasProperties> hateoasPropertiesOptional) {
+			return new DataRestHalProvider(repositoryRestConfiguration, hateoasPropertiesOptional);
 		}
 
 	}
@@ -130,16 +127,14 @@ public class SpringDocDataRestConfiguration {
 		 * Hal provider data rest hal provider.
 		 *
 		 * @param repositoryRestConfiguration the repository rest configuration
-		 * @param objectMapperProvider the object mapper provider
 		 * @return the data rest hal provider
 		 */
 		@Bean
 		@ConditionalOnMissingBean
 		@Primary
 		@Lazy(false)
-		DataRestHalProvider halProvider(Optional<RepositoryRestConfiguration> repositoryRestConfiguration,
-				ObjectMapperProvider objectMapperProvider) {
-			return new DataRestHalProvider(repositoryRestConfiguration, Optional.empty(), objectMapperProvider);
+		DataRestHalProvider halProvider(Optional<RepositoryRestConfiguration> repositoryRestConfiguration) {
+			return new DataRestHalProvider(repositoryRestConfiguration, Optional.empty());
 		}
 
 	}
