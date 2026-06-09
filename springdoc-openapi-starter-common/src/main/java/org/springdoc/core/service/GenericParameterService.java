@@ -63,6 +63,7 @@ import io.swagger.v3.oas.models.media.FileSchema;
 import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
+import tools.jackson.core.JacksonException;
 import io.swagger.v3.oas.models.parameters.Parameter.StyleEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -289,7 +290,7 @@ public class GenericParameterService {
 			try {
 				parameter.setExample(objectMapperProvider.jsonMapper().readTree(parameterDoc.example()));
 			}
-			catch (IOException e) {
+			catch (JacksonException e) {
 				parameter.setExample(parameterDoc.example());
 			}
 		}

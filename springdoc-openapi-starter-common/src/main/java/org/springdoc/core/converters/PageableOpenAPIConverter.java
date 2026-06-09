@@ -31,7 +31,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.JavaType;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverterContext;
@@ -39,6 +38,7 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.media.Schema;
 import org.springdoc.core.converters.models.Pageable;
 import org.springdoc.core.providers.ObjectMapperProvider;
+import tools.jackson.databind.JavaType;
 
 import static org.springdoc.core.utils.SpringDocUtils.getParentTypeName;
 

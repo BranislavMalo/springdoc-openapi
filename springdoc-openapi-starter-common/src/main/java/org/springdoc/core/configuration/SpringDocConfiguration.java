@@ -36,7 +36,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Future;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.querydsl.core.types.Predicate;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -132,6 +131,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.DeferredResult;
+import tools.jackson.databind.node.ObjectNode;
 
 import static org.springdoc.core.utils.Constants.GLOBAL_OPEN_API_CUSTOMIZER;
 import static org.springdoc.core.utils.Constants.SPRINGDOC_DEPRECATING_CONVERTER_ENABLED;
@@ -457,7 +457,6 @@ public class SpringDocConfiguration {
 			Optional<RepositoryRestResourceProvider> repositoryRestResourceProvider, Optional<RouterFunctionProvider> routerFunctionProvider,
 			Optional<SpringWebProvider> springWebProvider,
 			ObjectMapperProvider objectMapperProvider) {
-		objectMapperProvider.jsonMapper().registerModules(new SpringDocRequiredModule(), new SpringDocSealedClassModule());
 		return new SpringDocProviders(actuatorProvider, springCloudFunctionProvider, springSecurityOAuth2Provider, repositoryRestResourceProvider, routerFunctionProvider, springWebProvider, objectMapperProvider);
 	}
 

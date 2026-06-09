@@ -1,7 +1,6 @@
 package org.springdoc.core.configuration;
 
 import org.junit.jupiter.api.Test;
-import org.springdoc.core.configuration.SpringDocHateoasConfiguration.HateoasPropertiesConfiguration;
 import org.springdoc.core.configuration.SpringDocHateoasConfiguration.NoHateoasPropertiesConfiguration;
 import org.springdoc.core.converters.CollectionModelContentConverter;
 import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
@@ -96,7 +95,6 @@ class SpringDocHateoasConfigurationTest {
 					assertThat(context).hasNotFailed();
 					assertThat(context).hasSingleBean(HateoasHalProvider.class);
 					assertThat(context).hasSingleBean(CollectionModelContentConverter.class);
-					assertThat(context).hasSingleBean(HateoasPropertiesConfiguration.class);
 					assertThat(context).doesNotHaveBean(NoHateoasPropertiesConfiguration.class);
 				});
 	}
@@ -116,7 +114,6 @@ class SpringDocHateoasConfigurationTest {
 					assertThat(context).hasSingleBean(HateoasHalProvider.class);
 					assertThat(context).hasSingleBean(CollectionModelContentConverter.class);
 					assertThat(context).hasSingleBean(NoHateoasPropertiesConfiguration.class);
-					assertThat(context).doesNotHaveBean(HateoasPropertiesConfiguration.class);
 				});
 	}
 

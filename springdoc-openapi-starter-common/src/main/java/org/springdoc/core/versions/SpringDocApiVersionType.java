@@ -25,24 +25,9 @@
  */
 package org.springdoc.core.versions;
 
-<<<<<<<< HEAD:springdoc-openapi-tests/springdoc-openapi-hateoas-tests/src/test/java/test/org/springdoc/api/v31/app12/SpringDocApp12Test.java
-package test.org.springdoc.api.v31.app12;
-
-import test.org.springdoc.api.v31.AbstractSpringDocTest;
-
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-public class SpringDocApp12Test extends AbstractSpringDocTest {
-
-	@SpringBootApplication
-	static class SpringDocTestApp {
-	}
-
-========
 /**
  * @author bnasslahsen
  */
 public enum SpringDocApiVersionType {
 	PATH, HEADER, QUERY_PARAM, MEDIA_TYPE
->>>>>>>> upstream/main:springdoc-openapi-starter-common/src/main/java/org/springdoc/core/versions/SpringDocApiVersionType.java
 }

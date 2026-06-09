@@ -31,8 +31,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.fasterxml.jackson.databind.introspect.SimpleMixInResolver;
-import com.fasterxml.jackson.databind.type.ClassKey;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +40,7 @@ import test.org.springdoc.api.v30.AbstractSpringDocTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.test.context.TestPropertySource;
+import tools.jackson.databind.type.ClassKey;
 
 @TestPropertySource(properties = "springdoc.enable-data-rest=false")
 public class SpringDocApp301Test extends AbstractSpringDocTest {

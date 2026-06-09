@@ -37,6 +37,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.method.HandlerMethod;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.springframework.http.MediaType.ALL_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -45,7 +46,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class HelloController {
 
 	@Autowired
-	ObjectMapperProvider objectMapperProvider;
+    ObjectMapperProvider objectMapperProvider;
 
 	@GetMapping(
 			value = "/first",

@@ -36,9 +36,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverter;
 import io.swagger.v3.core.converter.ModelConverterContext;
@@ -49,6 +46,10 @@ import io.swagger.v3.oas.models.media.ComposedSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import org.springdoc.core.providers.ObjectMapperProvider;
 import org.springdoc.core.utils.SchemaUtils;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.introspect.BeanPropertyDefinition;
+import tools.jackson.databind.ser.SerializationContextExt;
 
 /**
  * Describes JsonNullable values without exposing their Java wrapper.
@@ -99,7 +100,7 @@ public class JsonNullableSupportConverter implements ModelConverter {
 				.map(ModelResolver::objectMapper).findFirst().orElse(null);
 		if (mapper == null)
 			return resolved;
-		var bean = mapper.getSerializationConfig().introspect(javaType);
+		var bean = serializationContext(mapper).introspectBeanDescription(javaType);
 		var schema = bean.getClassInfo().getAnnotation(io.swagger.v3.oas.annotations.media.Schema.class);
 		List<String> requiredProperties = schema == null ? List.of() : Arrays.asList(schema.requiredProperties());
 		for (BeanPropertyDefinition property : bean.findProperties()) {
@@ -123,6 +124,16 @@ public class JsonNullableSupportConverter implements ModelConverter {
 		if (model.getRequired() != null && model.getRequired().isEmpty())
 			model.setRequired(null);
 		return resolved;
+	}
+
+	private static SerializationContextExt serializationContext(ObjectMapper mapper) {
+		try {
+			Method m = ObjectMapper.class.getDeclaredMethod("_serializationContext");
+			m.setAccessible(true);
+			return (SerializationContextExt) m.invoke(mapper);
+		} catch (ReflectiveOperationException e) {
+			throw new IllegalStateException("Jackson 3 internal API changed", e);
+		}
 	}
 
 	/**

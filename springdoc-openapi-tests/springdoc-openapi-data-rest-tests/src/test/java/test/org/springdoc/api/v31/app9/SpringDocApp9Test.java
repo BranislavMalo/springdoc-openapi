@@ -30,8 +30,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.introspect.SimpleMixInResolver;
-import com.fasterxml.jackson.databind.type.ClassKey;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +39,7 @@ import test.org.springdoc.api.v31.AbstractSpringDocTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.test.context.TestPropertySource;
+import tools.jackson.databind.type.ClassKey;
 
 @TestPropertySource(properties = "spring.hateoas.use-hal-as-default-json-media-type= false")
 @SuppressWarnings({ "deprecation", "unchecked" })

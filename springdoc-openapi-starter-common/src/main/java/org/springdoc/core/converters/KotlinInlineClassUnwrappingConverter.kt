@@ -1,11 +1,11 @@
 package org.springdoc.core.converters
 
-import com.fasterxml.jackson.databind.JavaType
 import io.swagger.v3.core.converter.AnnotatedType
 import io.swagger.v3.core.converter.ModelConverter
 import io.swagger.v3.core.converter.ModelConverterContext
 import io.swagger.v3.oas.models.media.Schema
 import org.springdoc.core.providers.ObjectMapperProvider
+import tools.jackson.databind.JavaType
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmErasure

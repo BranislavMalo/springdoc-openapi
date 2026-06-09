@@ -44,7 +44,6 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverterContext;
 import io.swagger.v3.core.converter.ModelConverterContextImpl;
@@ -76,6 +75,8 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.RequestAttribute;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.springdoc.core.utils.SpringDocUtils.handleSchemaTypes;
 
@@ -517,7 +518,7 @@ public class SpringDocAnnotationsUtils extends AnnotationsUtils {
 			try {
 				defaultValue = objectMapper.readTree(defaultValueStr);
 			}
-			catch (IOException e) {
+			catch (JacksonException e) {
 				defaultValue = defaultValueStr;
 			}
 		}

@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -140,9 +141,9 @@ public class SpringDocDataRestUtils {
 			entityInfo.setDomainType(domainType);
 			List<String> ignoredFields = getIgnoredFields(resourceMetadata, entity);
 			if (!repositoryRestConfiguration.isIdExposedFor(entity.getType()))
-				entityInfo.setIgnoredFields(ignoredFields);
+				entityInfo.setIgnoredFields(new LinkedHashSet<>(ignoredFields));
 			List<String> associationsFields = getAssociationsFields(resourceMetadata, entity);
-			entityInfo.setAssociationsFields(associationsFields);
+			entityInfo.setAssociationsFields(new LinkedHashSet<>(associationsFields));
 			allAssociationsFieldsMap.put(domainType.getSimpleName(), getAllAssociationsFields(resourceMetadata, entity));
 			entityInoMap.put(domainType.getSimpleName(), entityInfo);
 		}

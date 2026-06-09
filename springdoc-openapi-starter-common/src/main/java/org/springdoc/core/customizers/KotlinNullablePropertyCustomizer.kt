@@ -26,7 +26,6 @@
 
 package org.springdoc.core.customizers
 
-import com.fasterxml.jackson.databind.JavaType
 import io.swagger.v3.core.converter.AnnotatedType
 import io.swagger.v3.core.converter.ModelConverter
 import io.swagger.v3.core.converter.ModelConverterContext
@@ -34,6 +33,7 @@ import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.SpecVersion
 import io.swagger.v3.oas.models.media.Schema
 import org.springdoc.core.providers.ObjectMapperProvider
+import tools.jackson.databind.JavaType
 import kotlin.reflect.full.memberProperties
 
 /**

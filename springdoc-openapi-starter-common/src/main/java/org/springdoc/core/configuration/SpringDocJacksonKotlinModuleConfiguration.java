@@ -26,7 +26,6 @@
 
 package org.springdoc.core.configuration;
 
-import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import org.springdoc.core.properties.SpringDocConfigProperties;
 import org.springdoc.core.providers.ObjectMapperProvider;
 
@@ -39,6 +38,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
+import tools.jackson.module.kotlin.KotlinModule;
 
 /**
  * The type Spring doc kotlin module configuration.
@@ -63,8 +63,19 @@ public class SpringDocJacksonKotlinModuleConfiguration {
 	@Bean
 	@Primary
 	ObjectMapperProvider springdocKotlinObjectMapperProvider(SpringDocConfigProperties springDocConfigProperties) {
-		ObjectMapperProvider mapperProvider = new ObjectMapperProvider(springDocConfigProperties);
-		mapperProvider.jsonMapper().registerModule(new KotlinModule.Builder().build());
-		return mapperProvider;
+		var provider = new ObjectMapperProvider(springDocConfigProperties);
+		var kotlinModule = new KotlinModule.Builder().build();
+
+		var jsonMapper = provider.jsonMapper()
+				.rebuild()
+				.addModule(kotlinModule)
+				.build();
+
+		var yamlMapper = provider.yamlMapper()
+				.rebuild()
+				.addModule(kotlinModule)
+				.build();
+
+		return new ObjectMapperProvider(springDocConfigProperties, jsonMapper, yamlMapper);
 	}
 }

@@ -106,11 +106,6 @@ public abstract class SwaggerWelcomeCommon extends AbstractSwaggerWelcome {
 					.path(getOauth2RedirectUrl()).build().toString());
 	}
 
-	@Override
-	protected void calculateUiRootPath(SwaggerUiConfigParameters swaggerUiConfigParameters, StringBuilder... sbUrls) {
-		super.calculateUiRootPath(swaggerUiConfigParameters, sbUrls);
-	}
-
 	/**
 	 * From current context path.
 	 *

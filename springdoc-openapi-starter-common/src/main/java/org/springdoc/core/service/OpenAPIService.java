@@ -26,6 +26,7 @@
 
 package org.springdoc.core.service;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
@@ -48,7 +49,6 @@ import java.util.stream.Collectors;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.core.jackson.TypeNameResolver;
 import io.swagger.v3.core.util.AnnotationsUtils;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -94,6 +94,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.method.HandlerMethod;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.springdoc.core.utils.Constants.DEFAULT_SERVER_DESCRIPTION;
 import static org.springdoc.core.utils.Constants.DEFAULT_TITLE;
@@ -267,8 +268,13 @@ public class OpenAPIService implements ApplicationContextAware {
 			calculatedOpenAPI.setPaths(new Paths());
 		}
 		else {
-			calculatedOpenAPI = cloneViaJson(openAPI, OpenAPI.class, new ObjectMapper()
-				.setDefaultPropertyInclusion(com.fasterxml.jackson.annotation.JsonInclude.Value.construct(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL, com.fasterxml.jackson.annotation.JsonInclude.Include.ALWAYS)));
+			var mapper = JsonMapper.builder()
+					.changeDefaultPropertyInclusion(incl -> incl
+							.withValueInclusion(JsonInclude.Include.NON_NULL)
+							.withContentInclusion(JsonInclude.Include.ALWAYS))
+					.build();
+
+			calculatedOpenAPI = cloneViaJson(openAPI, OpenAPI.class, mapper);
 		}
 
 		if (apiDef.isPresent()) {
