@@ -1,57 +1,55 @@
 {
-  "openapi" : "3.1.0",
-  "info" : {
-    "title" : "OpenAPI definition",
-    "version" : "v0"
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
   },
-  "servers" : [ {
-    "url" : "http://localhost",
-    "description" : "Generated server url"
-  } ],
-  "paths" : {
-    "/items" : {
-      "get" : {
-        "tags" : [ "hello-controller" ],
-        "operationId" : "list",
-        "parameters" : [ {
-          "name" : "firstNames",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
+  "servers": [
+    {
+      "url": "http://localhost",
+      "description": "Generated server url"
+    }
+  ],
+  "paths": {
+    "/api/2.0/users": {
+      "get": {
+        "tags": [
+          "user-controller"
+        ],
+        "operationId": "findAllv2",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
             }
           }
-        }, {
-          "name" : "middleNames",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          }
-        }, {
-          "name" : "phoneNumbers",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string",
-              "pattern" : "^\\d+$"
-            }
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "string"
+        }
+      }
+    },
+    "/api/v1.0/users": {
+      "get": {
+        "tags": [
+          "user-controller"
+        ],
+        "operationId": "findAllv1",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
                 }
               }
             }
@@ -60,5 +58,23 @@
       }
     }
   },
-  "components" : { }
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
 }

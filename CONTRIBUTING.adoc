@@ -86,7 +86,7 @@ Once the checkout has completed, a pop-up will suggest to open the project.
 
 If you haven't done so, install the formatter plugin so that proper formatting rules are applied automatically when you reformat code in the IDE.
 
-* Download the latest https://repo1.maven.org/maven2/io/spring/javaformat/spring-javaformat-intellij-idea-plugin/0.0.47[IntelliJ IDEA plugin].
+* Download the latest https://search.maven.org/search?q=g:io.spring.javaformat%20AND%20a:spring-javaformat-intellij-plugin[IntelliJ IDEA plugin].
 * Select "`IntelliJ IDEA`" -> "`Preferences`".
 * Select "`Plugins`".
 * Select the wheel and "`Install Plugin from Disk...`".
@@ -100,7 +100,6 @@ The formatter does not cover all rules (such as order of imports) and an additio
 * Select "`Editor`" -> "`Code Style`".
 * Select the wheel and "`Import Scheme`" -> "`IntelliJ IDEA code style XML`".
 * Select https://github.com/spring-projects/spring-boot/blob/main/.idea/codeStyles/codeStyleConfig.xml[`.idea/codeStyles/codeStyleConfig.xml`] from this repository.
-
 ==== Importing into Eclipse
 
 You can use Spring Boot project specific source formatting settings.

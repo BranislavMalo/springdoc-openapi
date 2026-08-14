@@ -28,10 +28,10 @@ package org.springdoc.webflux.ui;
 
 import org.springdoc.core.properties.SwaggerUiConfigParameters;
 import org.springdoc.core.properties.SwaggerUiConfigProperties;
-import org.springdoc.ui.AbstractSwaggerConfigurer;
 
+import org.springdoc.ui.AbstractSwaggerConfigurer;
 import org.springframework.boot.autoconfigure.web.WebProperties;
-import org.springframework.boot.autoconfigure.web.reactive.WebFluxProperties;
+import org.springframework.boot.webflux.autoconfigure.WebFluxProperties;
 import org.springframework.cache.Cache;
 import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.http.CacheControl;
@@ -127,8 +127,8 @@ public class SwaggerWebFluxConfigurer extends AbstractSwaggerConfigurer implemen
 	 * @param handlerConfig the swagger handler config.
 	 */
 	protected void addSwaggerResourceHandler(ResourceHandlerRegistry registry, SwaggerResourceHandlerConfig handlerConfig) {
-		ResourceHandlerRegistration handlerRegistration = registry.addResourceHandler(handlerConfig.patterns());
-		handlerRegistration.addResourceLocations(handlerConfig.locations());
+		ResourceHandlerRegistration handlerRegistration = registry.addResourceHandler(handlerConfig.patternsArray());
+		handlerRegistration.addResourceLocations(handlerConfig.locationsArray());
 
 		ResourceChainRegistration chainRegistration;
 		if (handlerConfig.cacheResources()) {

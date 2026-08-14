@@ -26,12 +26,13 @@
 
 package test.org.springdoc.api.v30.app248;
 
+import java.util.UUID;
+
 import io.swagger.v3.oas.annotations.media.Schema;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.UUID;
 
 @RestController
 public class HelloController {

@@ -62,7 +62,6 @@ import org.springframework.data.rest.core.mapping.ResourceMetadata;
 import org.springframework.data.rest.webmvc.PersistentEntityResource;
 import org.springframework.data.rest.webmvc.support.BackendId;
 import org.springframework.data.rest.webmvc.support.DefaultedPageable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
@@ -100,7 +99,7 @@ public class DataRestRequestService {
 	 * The Spring doc data rest utils.
 	 */
 	private final SpringDocDataRestUtils springDocDataRestUtils;
-
+	
 	/**
 	 * The Optional delegating method parameter customizers.
 	 */
@@ -118,7 +117,7 @@ public class DataRestRequestService {
 	 * @param requestBuilder                        the request builder
 	 * @param springDocDataRestUtils                the spring doc data rest utils
 	 */
-	public DataRestRequestService(SpringDocParameterNameDiscoverer localSpringDocParameterNameDiscoverer, 
+	public DataRestRequestService(SpringDocParameterNameDiscoverer localSpringDocParameterNameDiscoverer,
 			AbstractRequestService requestBuilder,
 			SpringDocDataRestUtils springDocDataRestUtils) {
 		this.localSpringDocParameterNameDiscoverer = localSpringDocParameterNameDiscoverer;
@@ -266,6 +265,6 @@ public class DataRestRequestService {
 	 */
 	private boolean isHeaderToIgnore(MethodParameter methodParameter) {
 		RequestHeader requestHeader = methodParameter.getParameterAnnotation(RequestHeader.class);
-		return requestHeader != null && HttpHeaders.ACCEPT.equals(requestHeader.value());
+		return requestHeader != null;
 	}
 }

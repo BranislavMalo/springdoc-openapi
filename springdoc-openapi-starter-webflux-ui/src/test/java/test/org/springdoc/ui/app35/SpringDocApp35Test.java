@@ -24,10 +24,9 @@
 package test.org.springdoc.ui.app35;
 
 import org.junit.jupiter.api.Test;
-import test.org.springdoc.ui.AbstractSpringDocTest;
-
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.CacheControl;
+import test.org.springdoc.ui.AbstractSpringDocTest;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
 

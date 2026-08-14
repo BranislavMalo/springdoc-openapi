@@ -103,8 +103,8 @@ public interface JavadocProvider {
 	 */
 	String getFirstSentence(String text);
 
-    /**
-     * Clean the temp resources.
-     */
-    default void clearCache() {}
+	/**
+	 * Clean the temp resources.
+	 */
+	default void clearCache() {}
 }

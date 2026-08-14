@@ -68,6 +68,7 @@ class SpringDocKotlinConfiguration() {
 			.addDeprecatedType(Deprecated::class.java)
 	}
 
+	
 	@ConditionalOnClass(name = ["kotlin.reflect.full.KClasses"])
 	class KotlinReflectDependingConfiguration {
 
@@ -81,6 +82,7 @@ class SpringDocKotlinConfiguration() {
 		@Bean
 		@Lazy(false)
 		@ConditionalOnMissingBean
+		@ConditionalOnProperty(name = [Constants.SPRINGDOC_KOTLIN_NULLABLE_PROPERTY_CUSTOMIZER_ENABLED], matchIfMissing = true)
 		fun kotlinNullablePropertyCustomizer(objectMapperProvider: ObjectMapperProvider): KotlinNullablePropertyCustomizer {
 			return KotlinNullablePropertyCustomizer(objectMapperProvider)
 		}

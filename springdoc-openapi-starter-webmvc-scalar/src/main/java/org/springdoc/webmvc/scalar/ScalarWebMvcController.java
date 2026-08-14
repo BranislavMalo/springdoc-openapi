@@ -69,7 +69,7 @@ public class ScalarWebMvcController extends AbstractScalarController {
 	@GetMapping
 	public ResponseEntity<String> getDocs(HttpServletRequest request) throws IOException {
 		String apiDocsPath = springDocConfigProperties.getApiDocs().getPath();
-		String requestUrl = request.getRequestURL().toString();
+		String requestUrl =request.getRequestURL().toString();
 		String scalarPath = scalarProperties.getPath();
 		return getDocs(requestUrl, apiDocsPath, scalarPath);
 	}

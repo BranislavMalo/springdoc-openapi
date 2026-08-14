@@ -61,7 +61,7 @@ public class ScalarActuatorController extends AbstractScalarController {
 	 * @param springDocConfigProperties the spring doc config properties 
 	 * @param webEndpointProperties the web endpoint properties
 	 */
-	public ScalarActuatorController(SpringBootScalarProperties scalarProperties, SpringDocConfigProperties springDocConfigProperties,  WebEndpointProperties webEndpointProperties) {
+	public ScalarActuatorController(SpringBootScalarProperties scalarProperties, SpringDocConfigProperties springDocConfigProperties, WebEndpointProperties webEndpointProperties) {
 		super(scalarProperties, springDocConfigProperties);
 		this.webEndpointProperties = webEndpointProperties;
 	}

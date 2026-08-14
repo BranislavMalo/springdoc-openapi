@@ -34,7 +34,7 @@ import jakarta.persistence.Enumerated;
 public class Dog extends Pet {
 
 	@Enumerated(EnumType.STRING)
-	private CoatType coat;
+	private Dog.CoatType coat;
 
 	public CoatType getCoat() {
 		return coat;

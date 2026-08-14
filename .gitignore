@@ -144,5 +144,6 @@ Desktop.ini
 # ESLint
 ######################
 .eslintcache
-/.claude/
 /CLAUDE.md
+/.claude/
+/default.profraw

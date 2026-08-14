@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springdoc.core.utils.Constants;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
@@ -44,16 +44,31 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
 
+/**
+ * The type Abstract common test.
+ */
 @AutoConfigureWebTestClient(timeout = "3600000")
 @ActiveProfiles("test")
 @TestPropertySource(properties = { "management.endpoints.enabled-by-default=false" })
 public abstract class AbstractCommonTest {
 
+	/**
+	 * The constant LOGGER.
+	 */
 	protected static final Logger LOGGER = LoggerFactory.getLogger(AbstractCommonTest.class);
 
+	/**
+	 * The Web test client.
+	 */
 	@Autowired
 	protected WebTestClient webTestClient;
 
+	/**
+	 * Gets content.
+	 *
+	 * @param fileName the file name
+	 * @return the content
+	 */
 	protected String getContent(String fileName) {
 		try {
 			Path path = Paths.get(AbstractCommonTest.class.getClassLoader().getResource(fileName).toURI());
@@ -65,6 +80,13 @@ public abstract class AbstractCommonTest {
 		}
 	}
 
+	/**
+	 * Test app.
+	 *
+	 * @param testId    the test id
+	 * @param groupName the group name
+	 * @throws Exception the exception
+	 */
 	protected void testApp(String testId, String groupName) throws Exception {
 		String result = null;
 		try {

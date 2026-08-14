@@ -51,14 +51,14 @@ public class SpringDocAppInitializer {
 	private final String property;
 
 	/**
-	 * The constant LOGGER.
-	 */
-	private static final Logger LOGGER = LoggerFactory.getLogger(SpringDocAppInitializer.class);
-
-	/**
 	 * The Springdoc enabled.
 	 */
 	private final boolean springdocEnabled;
+	
+	/**
+	 * The constant LOGGER.
+	 */
+	private static final Logger LOGGER = LoggerFactory.getLogger(SpringDocAppInitializer.class);
 
 	/**
 	 * Instantiates a new Spring doc app initializer.
@@ -77,7 +77,7 @@ public class SpringDocAppInitializer {
 	 * Init.
 	 */
 	@EventListener(ApplicationReadyEvent.class)
-    @Order(0)
+	@Order(0)
 	public void init() {
 		if(!this.springdocEnabled)
 			LOGGER.warn("SpringDoc {} endpoint is enabled by default. To disable it in production, set the property '{}=false'", endpoint, property);

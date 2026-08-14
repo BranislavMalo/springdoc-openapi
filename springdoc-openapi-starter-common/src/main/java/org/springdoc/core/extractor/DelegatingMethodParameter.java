@@ -112,6 +112,7 @@ public class DelegatingMethodParameter extends MethodParameter {
 	 * @param additionalParameterAnnotations the additional parameter annotations
 	 * @param methodAnnotations              the method annotations
 	 * @param isParameterObject              the is parameter object
+	 * @param field                          the field
 	 * @param isNotRequired                  the is required
 	 */
 	DelegatingMethodParameter(MethodParameter delegate, String parameterName, Annotation[] additionalParameterAnnotations, Annotation[] methodAnnotations, boolean isParameterObject, Field field, boolean isNotRequired) {
@@ -167,7 +168,7 @@ public class DelegatingMethodParameter extends MethodParameter {
 	 * @param methodParameter the method parameter
 	 * @param containingClass a specific containing class (potentially a subclass of the declaring class, e.g. substituting a type variable) A copy of spring withContainingClass, to keep compatibility with older spring versions
 	 * @return the method parameter
-	 * @see #getParameterType() #getParameterType()#getParameterType()
+	 * @see #getParameterType() #getParameterType()#getParameterType()#getParameterType()#getParameterType()
 	 */
 	public static MethodParameter changeContainingClass(MethodParameter methodParameter, @Nullable Class<?> containingClass) {
 		MethodParameter result = methodParameter.clone();
@@ -196,11 +197,13 @@ public class DelegatingMethodParameter extends MethodParameter {
 	}
 
 	@Override
+	@Nullable
 	public Method getMethod() {
 		return delegate.getMethod();
 	}
 
 	@Override
+	@Nullable
 	public Constructor<?> getConstructor() {
 		return delegate.getConstructor();
 	}
@@ -309,7 +312,7 @@ public class DelegatingMethodParameter extends MethodParameter {
 	 * Gets field. If Is parameter object. then The Field should be not null
 	 *
 	 * @return the field
-	 * @see #isParameterObject
+	 * @see #isParameterObject #isParameterObject#isParameterObject
 	 */
 	@Nullable
 	public Field getField() {

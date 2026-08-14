@@ -1,88 +1,40 @@
 {
-  "openapi" : "3.1.0",
-  "info" : {
-    "title" : "OpenAPI definition",
-    "version" : "v0"
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
   },
-  "servers" : [ {
-    "url" : "http://localhost",
-    "description" : "Generated server url"
-  } ],
-  "paths" : {
-    "/class-works3/{itemId}" : {
-      "get" : {
-        "tags" : [ "hello-controller" ],
-        "operationId" : "dataClass3",
-        "parameters" : [ {
-          "name" : "itemId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid",
-            "description" : "Unique item identifier",
-            "example" : "9d9d46e5-d41c-4774-885d-8e9dbc67735c"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "string"
+  "servers": [
+    {
+      "url": "http://localhost",
+      "description": "Generated server url"
+    }
+  ],
+  "paths": {
+    "/api/users/media": {
+      "get": {
+        "tags": [
+          "user-controller"
+        ],
+        "operationId": "getUsersMediaV2",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json;version=2.0": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserDTOv2"
+                  }
                 }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/class-works2/{pathSchema}" : {
-      "get" : {
-        "tags" : [ "hello-controller" ],
-        "operationId" : "dataClass2",
-        "parameters" : [ {
-          "name" : "pathSchema",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/PathSchema"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/class-works/{regularSchema}" : {
-      "get" : {
-        "tags" : [ "hello-controller" ],
-        "operationId" : "dataClass1",
-        "parameters" : [ {
-          "name" : "regularSchema",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/RegularSchema"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/RegularSchema"
+              },
+              "application/json;version=1.0": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserDTOv1"
+                  }
                 }
               }
             }
@@ -91,28 +43,38 @@
       }
     }
   },
-  "components" : {
-    "schemas" : {
-      "PathSchema" : {
-        "type" : "object",
-        "description" : "pathSchema",
-        "example" : 123,
-        "properties" : {
-          "value" : {
-            "type" : "string",
-            "format" : "uuid"
+  "components": {
+    "schemas": {
+      "UserDTOv2": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
           }
         }
       },
-      "RegularSchema" : {
-        "type" : "object",
-        "description" : "regularSchema",
-        "properties" : {
-          "name" : {
-            "type" : "string"
+      "UserDTOv1": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
           },
-          "value" : {
-            "type" : "string"
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
           }
         }
       }

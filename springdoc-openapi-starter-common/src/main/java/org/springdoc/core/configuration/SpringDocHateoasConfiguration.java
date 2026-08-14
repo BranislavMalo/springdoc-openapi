@@ -28,8 +28,6 @@ package org.springdoc.core.configuration;
 
 import java.util.Optional;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
 import org.springdoc.core.converters.CollectionModelContentConverter;
 import org.springdoc.core.converters.HateoasLinksConverter;
 import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
@@ -44,11 +42,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.boot.autoconfigure.hateoas.HateoasProperties;
+import org.springframework.boot.hateoas.autoconfigure.HateoasProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.hateoas.Links;
 import org.springframework.hateoas.server.LinkRelationProvider;
 
 /**
@@ -59,7 +56,7 @@ import org.springframework.hateoas.server.LinkRelationProvider;
 @Lazy(false)
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnExpression("${springdoc.api-docs.enabled:true} and ${springdoc.enable-hateoas:true}")
-@ConditionalOnClass(LinkRelationProvider.class)
+@ConditionalOnClass({LinkRelationProvider.class, HateoasProperties.class})
 @ConditionalOnWebApplication
 @ConditionalOnBean(SpringDocConfiguration.class)
 public class SpringDocHateoasConfiguration {
@@ -99,7 +96,6 @@ public class SpringDocHateoasConfiguration {
 	 * @param halProvider               the hal provider
 	 * @param springDocConfigProperties the spring doc config properties
 	 * @return the open api customizer
-	 * @see org.springframework.hateoas.mediatype.hal.Jackson2HalModule.HalLinkListSerializer#serialize(Links, JsonGenerator, SerializerProvider) org.springframework.hateoas.mediatype.hal.Jackson2HalModule.HalLinkListSerializer#serialize(Links, JsonGenerator, SerializerProvider)org.springframework.hateoas.mediatype.hal.Jackson2HalModule.HalLinkListSerializer#serialize(Links, JsonGenerator, SerializerProvider)org.springframework.hateoas.mediatype.hal.Jackson2HalModule.HalLinkListSerializer#serialize(Links, JsonGenerator, SerializerProvider)org.springframework.hateoas.mediatype.hal.Jackson2HalModule.HalLinkListSerializer#serialize(Links, JsonGenerator, SerializerProvider)org.springframework.hateoas.mediatype.hal.Jackson2HalModule.HalLinkListSerializer#serialize(Links, JsonGenerator, SerializerProvider)org.springframework.hateoas.mediatype.hal.Jackson2HalModule.HalLinkListSerializer#serialize(Links, JsonGenerator, SerializerProvider)org.springframework.hateoas.mediatype.hal.Jackson2HalModule.HalLinkListSerializer#serialize(Links, JsonGenerator, SerializerProvider)
 	 */
 	@Bean(Constants.LINKS_SCHEMA_CUSTOMIZER)
 	@ConditionalOnMissingBean(name = Constants.LINKS_SCHEMA_CUSTOMIZER)

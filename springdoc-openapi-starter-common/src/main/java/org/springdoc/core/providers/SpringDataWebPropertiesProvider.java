@@ -27,7 +27,8 @@ package org.springdoc.core.providers;
 
 import java.util.Optional;
 
-import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
+import org.springframework.boot.data.autoconfigure.web.DataWebProperties;
+
 
 /**
  * The type Spring data web properties provider.
@@ -40,14 +41,14 @@ public class SpringDataWebPropertiesProvider {
 	/**
 	 * The Optional spring data web properties.
 	 */
-	private final Optional<SpringDataWebProperties> optionalSpringDataWebProperties;
+	private final Optional<DataWebProperties> optionalSpringDataWebProperties;
 
 	/**
 	 * Instantiates a new Spring data web properties provider.
 	 *
 	 * @param optionalSpringDataWebProperties the optional spring data web properties
 	 */
-	public SpringDataWebPropertiesProvider(Optional<SpringDataWebProperties> optionalSpringDataWebProperties) {
+	public SpringDataWebPropertiesProvider(Optional<DataWebProperties> optionalSpringDataWebProperties) {
 		this.optionalSpringDataWebProperties = optionalSpringDataWebProperties;
 	}
 
@@ -56,7 +57,7 @@ public class SpringDataWebPropertiesProvider {
 	 *
 	 * @return the spring data web properties
 	 */
-	public SpringDataWebProperties getSpringDataWebProperties() {
+	public DataWebProperties getSpringDataWebProperties() {
 		return optionalSpringDataWebProperties.orElse(null);
 	}
 

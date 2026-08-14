@@ -34,7 +34,6 @@ import org.springdoc.core.properties.SpringDocConfigProperties;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ConditionalOnManagementPort;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementPortType;
-import org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -43,6 +42,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.boot.webmvc.actuate.endpoint.web.WebMvcEndpointHandlerMapping;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -68,8 +68,8 @@ public class ScalarConfiguration {
 	/**
 	 * Scalar web mvc controller scalar web mvc controller.
 	 *
-	 * @param scalarProperties the scalar properties 
-	 * @param springDocConfigProperties the spring doc config properties 
+	 * @param scalarProperties the scalar properties  
+	 * @param springDocConfigProperties the spring doc config properties  
 	 * @return  the scalar web mvc controller
 	 */
 	@Bean
@@ -95,7 +95,7 @@ public class ScalarConfiguration {
 	/**
 	 * Spring doc app initializer spring doc app initializer.
 	 *
-	 * @param scalarProperties the spring doc config properties 
+	 * @param scalarProperties the spring doc config properties  
 	 * @return  the spring doc app initializer
 	 */
 	@Bean
@@ -126,13 +126,13 @@ public class ScalarConfiguration {
 		@ConditionalOnMissingBean
 		@Lazy(false)
 		ScalarActuatorController scalarActuatorController(SpringBootScalarProperties properties, SpringDocConfigProperties springDocConfigProperties,  WebEndpointProperties webEndpointProperties) {
-			return new ScalarActuatorController(properties,springDocConfigProperties, webEndpointProperties);
+			return new ScalarActuatorController(properties, springDocConfigProperties, webEndpointProperties);
 		}
 
 		/**
 		 * Spring doc scalar initializer spring doc app initializer.
 		 *
-		 * @param scalarProperties the scalar properties 
+		 * @param scalarProperties the scalar properties  
 		 * @return  the spring doc app initializer
 		 */
 		@Bean

@@ -207,7 +207,7 @@ public abstract class AbstractSwaggerUiConfigProperties {
 	public void setDocumentTitle(String documentTitle) {
 		this.documentTitle = documentTitle;
 	}
-
+	
 	/**
 	 * Gets with credentials.
 	 *

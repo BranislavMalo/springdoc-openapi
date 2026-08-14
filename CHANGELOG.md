@@ -5,54 +5,92 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.8.17] - 2026-04-12
+## [3.1.0] - 2026-07-31
 
 ### Added
 
-- Add support for the `@Range` constraint validation annotation
-- Auto-set `nullable: true` for Kotlin nullable types in schema properties
+- #3269 – Add mechanism to disable `nullable` for Kotlin properties
+- Allow request-specific Swagger UI index transformation
 
 ### Changed
 
-- Upgrade Spring Boot to version **3.5.13**
-- Upgrade swagger-core to version **2.2.47**
-- Upgrade swagger-ui to version **5.32.2**
+- Upgrade Spring Boot to version **4.1.0**
+- Upgrade Spring AI to version **2.0.0**
+- Upgrade swagger-core to version **2.2.52**
+- Upgrade swagger-ui to version **5.32.11**
+- #3307 – Act upon SonarQube warnings
+- #3306 – Act upon SonarQube warnings
 
 ### Fixed
 
-- #3259 – Fix an issue with annotated types with generics on parameters
-- #3255 – Handle `$ref` nullable wrapping and OAS 3.1 support
-- #3245 – Upgrade swagger-core from 2.2.43 to 2.2.45 (fixes schema resolution issues)
-- #3241 – Generic error responses from multiple `@ControllerAdvice` are still nondeterministic across OS
-- #3236 – Preserve YAML group URLs in Swagger UI
-- Fix `PropertyResolverUtils` to retain a `JsonNode` when reading an `ExtensionProperty` annotation
-- Fix handling of default values for `LocalDate`
+- #3304 – Kotlin parent class's field is not properly marked as nullable
+- #3294 – Duplicated path getting `swagger-config`
+- #3293 – Inconsistent OpenAPI schema naming with `SNAKE_CASE`: some Java record fields remain camelCase
+- #3292 – Make `WebProperties` and `WebMvcProperties` optional in `SwaggerConfig`
+- #3284 – Upgrade swagger-core from version 2.2.48 to 2.2.49
+- #3282 – Preserve version from `nest()` predicate across all routes in `nest`
+- #3281 – Stabilize Spring Data `Page` schema property order
+- #3274 – Description disappears from the generated json after upgrade to 3.0.3
+- #3270 – Validation annotation of `ParameterObject` property applied to `PathVariable` with the same name, even in unrelated endpoints
+- #3266 – Upgrade swagger-core from version 2.2.47 to 2.2.48
+- #3263 – Null key for a `Map` not allowed in JSON
 
-## [2.8.16] - 2026-02-27
+## [3.0.3] - 2026-04-12
 
 ### Added
 
-- Add support for `springdoc.swagger-ui.document-title` property to customize the browser tab title
+- #3246 – Add Springdoc OpenAPI MCP (Model Context Protocol) support
+- #3256 – Auto-set `nullable: true` for Kotlin nullable types in schema properties
+- #3239 – Add support for the `@Range` constraint validation annotation
+- #3244 – Handle default values for `LocalDate`
 
 ### Changed
 
-- Upgrade Spring Boot to version **3.5.11**
+- Upgrade Spring Boot to version **4.0.5**
+- Upgrade swagger-core to version **2.2.47**
+- Upgrade swagger-ui to version **5.32.2**
+- #3260 – `@ConditionalOnClass(HateoasProperties.class)` in `SpringDocHateoasConfiguration`
+- Forwards all MCP non-transport headers to downstream methods
+- Dynamically resolve the base path from `window.location.pathname` for MCP UI
+
+### Fixed
+
+- #3258 – Setting API Version Required when using WebFlux breaks the Swagger UI
+- #3259 – Annotated Generic properties getting applied to sibling properties
+- #3255 – `Direction` enum: fixed visibility scope of group order so that `setGroupsOrder` method can be used
+- #3247 – Preserve YAML group URLs in Swagger UI
+- #3245 – Upgrade swagger-core from version 2.2.43 to 2.2.45
+- #3235 – `PropertyResolverUtils` retains a `JsonNode` when reading an `ExtensionProperty` annotation
+- #3226 – Propagate `JsonView` context when resolving `Page<T>` schema
+
+## [3.0.2] - 2026-02-27
+
+### Added
+
+- #3229 – Add support for Spring Framework API Versioning with Functional Endpoints
+- #3208 – Add `springdoc.swagger-ui.document-title` property
+
+### Changed
+
+- Upgrade Spring Boot to version **4.0.3**
 - Upgrade swagger-core to version **2.2.43**
 - Upgrade swagger-ui to version **5.32.0**
 - Upgrade Scalar to version **0.5.55**
 
 ### Fixed
 
+- #3232 – Gracefully handle springdoc endpoint paths during API version resolution
 - #3230 – Scalar source URLs resolve to `null/<groupName>` on second request when using `GroupedOpenApi`
-- #3226 – Propagate `@JsonView` context when resolving `Page<T>` schema in `PageOpenAPIConverter`
-- #3205 – springdoc-ui does not work with native compile GraalVM 25
-- #3219 – Upgrade swagger-core from 2.2.42 to 2.2.43 (fixes schema resolution issues)
-- #3193 – OpenApi field in `SpringDocConfigProperties` does not comply with camelCase naming conventions
-- #3161 – Prevent duplicate `_links` in `allOf` child schemas extending `RepresentationModel`
-- Fix type annotation not considered when Kotlin is not present
-- Fix property resolution for parameter default values
+- #3228 – springdoc-openapi-starter 3.x doesn't depend on `org.springframework.boot:spring-boot-starter`
+- #3220 – Reachability metadata not compatible with GraalVM 25
+- #3195 – Application won't compile when OpenApi and spring-boot-data-rest is present
+- #3193 – `OpenApi` field in `SpringDocConfigProperties` does not comply with camel case naming conventions
+- #3215 – Type annotation not considered when Kotlin is not present
+- #3199 – Prevent duplicate `_links` in `allOf` child schemas
+- #3198 – Property resolution for parameter default values
+- #3206 – Upgrade swagger-core from version 2.2.41 to 2.2.42
 
-## [2.8.15] - 2026-01-01
+## [3.0.1] - 2026-01-01
 
 ### Added
 
@@ -63,14 +101,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #3187 – Add Scalar WebMVC and WebFlux support
 - #3185 – Disable creation of blank GitHub issues (GitHub settings & workflow)
 - #3186 – Decouple Web Server APIs following Spring Boot modularization
-- #3131 - Improve warning messages when documentation is explicitly enabled
-- #3183 - Remove unused operations consumer from route builder methods
-- #3141 - Change handling so `useReturnTypeSchema` is evaluated at HTTP status code level instead of method level
+- #3131 – Improve warning messages when documentation is explicitly enabled
+- #3183 – Remove unused operations consumer from route builder methods
+- #3141 – Change handling so `useReturnTypeSchema` is evaluated at HTTP status code level instead of method level
 
 ### Changed
 
-- Upgrade Spring Boot to version **3.5.9**
-- Upgrade swagger-core to version **2.2.41** 
+- Upgrade Spring Boot to version **4.0.1**
+- Upgrade swagger-core to version **2.2.41**
 - Upgrade swagger-ui to version **5.31.0**
 - Upgrade Scalar to version **0.4.3**
 
@@ -81,7 +119,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #3168 – Support `@Schema` annotations on Kotlin value classes
 - #3178 – Fix regression when generating documentation for Kotlin `LinkedHashSet`
 - #3170 – Fix warnings when setting title and description in `application.yml`
-- #3187 – Add scalar scalar-webmvc and scalar-webflux support
+- #3173 – Fix `/v3/api-docs` returning Base64-encoded response with Spring Framework 7.0.2
+- #3155 – Fix native image support regression with SpringDoc 3.0 and Spring Boot 4.0
+
+## [3.0.0] - 2025-11-21
+
+### Added
+- #2975 - Spring Framework 7 - Initial API versioning support
+- #3123 - Support static resources for webflux
+
+### Changed
+- Upgrade to Spring Boot 4.0.0
+- Upgrade to Scalar 0.4.3
+
+### Fixed
+
+- #3131 - Warning messages when docs are explicitly enabled
+- #3121 - NPE in KotlinDeprecatedPropertyCustomizer - resolvedSchema is null
+
+## [3.0.0-RC1] - 2025-11-02
+
+### Added
+- #3095 - Add support for Spring Boot 4.0.0-RC1
 
 ## [2.8.14] - 2025-11-02
 
@@ -128,19 +187,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #3071 - @io.swagger.v3.oas.annotations.parameters.RequestBody does not work well with @RequestPart
 - #3066 - Parameter is now required after upgrading to springdoc-openapi 2.8.10
 
-## [2.8.11] - 2025-08-23
+## [3.0.0-M1] - 2025-08-20
 
 ### Added
-
-- #3065 - javadoc and overall performance optimization
-
-### Changed
-
-- Upgrade spring-boot to v3.5.5
-
-### Fixed
-
-- #3064 -ClassNotFoundException: kotlin.reflect.full.KClasses
+- #3062 - Add Spring Boot 4.0.0-M2 support
 
 ## [2.8.10] - 2025-08-20
 

@@ -49,38 +49,6 @@
         }
       }
     },
-    "/persons2": {
-      "post": {
-        "tags": [
-          "hello-controller"
-        ],
-        "summary": "Persons 2 string.",
-        "description": "Persons 2 string.",
-        "operationId": "persons2",
-        "requestBody": {
-          "description": "requestBody description outside",
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "the string",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/persons3": {
       "post": {
         "tags": [
@@ -100,6 +68,38 @@
             }
           },
           "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "the string",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/persons2": {
+      "post": {
+        "tags": [
+          "hello-controller"
+        ],
+        "summary": "Persons 2 string.",
+        "description": "Persons 2 string.",
+        "operationId": "persons2",
+        "requestBody": {
+          "description": "requestBody description outside",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
         },
         "responses": {
           "200": {

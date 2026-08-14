@@ -66,7 +66,7 @@ public class RequestService extends AbstractRequestService {
 	 */
 	public RequestService(GenericParameterService parameterBuilder, RequestBodyService requestBodyService,
 			SpringDocCustomizers customizers,
-			SpringDocParameterNameDiscoverer localSpringDocParameterNameDiscoverer, 
+			SpringDocParameterNameDiscoverer localSpringDocParameterNameDiscoverer,
 			MethodParameterPojoExtractor methodParameterPojoExtractor) {
 		super(parameterBuilder, requestBodyService, customizers, localSpringDocParameterNameDiscoverer,methodParameterPojoExtractor);
 	}

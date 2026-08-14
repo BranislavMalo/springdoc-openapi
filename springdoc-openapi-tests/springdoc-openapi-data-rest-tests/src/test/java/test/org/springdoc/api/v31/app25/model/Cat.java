@@ -34,9 +34,9 @@ import jakarta.persistence.Enumerated;
 public class Cat extends Pet {
 
 	@Enumerated(EnumType.STRING)
-	private CoatType coat;
+	private Cat.CoatType coat;
 
-	public Cat(CoatType coat) {
+	public Cat(Cat.CoatType coat) {
 		this.coat = coat;
 	}
 

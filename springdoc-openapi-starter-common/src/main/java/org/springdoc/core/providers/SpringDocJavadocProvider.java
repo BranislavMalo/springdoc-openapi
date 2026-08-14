@@ -59,10 +59,10 @@ public class SpringDocJavadocProvider implements JavadocProvider {
 	 */
 	private final CommentFormatter formatter = new CommentFormatter();
 
-    /**
-     * The Class javadoc cache.
-     */
-    private final Map<Class<?>, ClassJavadoc> classJavadocCache = new HashMap<>();
+	/**
+	 * The Class javadoc cache.
+	 */
+	private final Map<Class<?>, ClassJavadoc> classJavadocCache = new HashMap<>();
 
 
 	/**
@@ -182,37 +182,37 @@ public class SpringDocJavadocProvider implements JavadocProvider {
 		return text;
 	}
 
-    private ClassJavadoc getJavadoc(Class<?> cl) {
-        ClassJavadoc classJavadoc = classJavadocCache.get(cl);
-        if (classJavadoc != null) {
-            return classJavadoc;
-        }
-        classJavadoc = RuntimeJavadoc.getJavadoc(cl);
-        classJavadocCache.put(cl, classJavadoc);
-        return classJavadoc;
-    }
+	private ClassJavadoc getJavadoc(Class<?> cl) {
+		ClassJavadoc classJavadoc = classJavadocCache.get(cl);
+		if (classJavadoc != null) {
+			return classJavadoc;
+		}
+		classJavadoc = RuntimeJavadoc.getJavadoc(cl);
+		classJavadocCache.put(cl, classJavadoc);
+		return classJavadoc;
+	}
 
-    private MethodJavadoc getJavadoc(Method method) {
-        ClassJavadoc classJavadoc = getJavadoc(method.getDeclaringClass());
-        List<String> paramTypes = Arrays.stream(method.getParameterTypes())
-                .map(Class::getCanonicalName)
-                .toList();
-        return classJavadoc.getMethods()
-                .stream()
-                .filter(it -> Objects.equals(method.getName(), it.getName()) && Objects.equals(paramTypes, it.getParamTypes()))
-                .findFirst().orElseGet(() -> MethodJavadoc.createEmpty(method));
-    }
+	private MethodJavadoc getJavadoc(Method method) {
+		ClassJavadoc classJavadoc = getJavadoc(method.getDeclaringClass());
+		List<String> paramTypes = Arrays.stream(method.getParameterTypes())
+				.map(Class::getCanonicalName)
+				.toList();
+		return classJavadoc.getMethods()
+				.stream()
+				.filter(it -> Objects.equals(method.getName(), it.getName()) && Objects.equals(paramTypes, it.getParamTypes()))
+				.findFirst().orElseGet(() -> MethodJavadoc.createEmpty(method));
+	}
 
-    private FieldJavadoc getJavadoc(Field field) {
-        ClassJavadoc classJavadoc = getJavadoc(field.getDeclaringClass());
-        return classJavadoc.getFields()
-                .stream()
-                .filter(it -> Objects.equals(field.getName(), it.getName()))
-                .findFirst().orElseGet(() -> FieldJavadoc.createEmpty(field.getName()));
-    }
+	private FieldJavadoc getJavadoc(Field field) {
+		ClassJavadoc classJavadoc = getJavadoc(field.getDeclaringClass());
+		return classJavadoc.getFields()
+				.stream()
+				.filter(it -> Objects.equals(field.getName(), it.getName()))
+				.findFirst().orElseGet(() -> FieldJavadoc.createEmpty(field.getName()));
+	}
 
-    @Override
-    public void clearCache() {
-        classJavadocCache.clear();
-    }
+	@Override
+	public void clearCache() {
+		classJavadocCache.clear();
+	}
 }

@@ -56,6 +56,7 @@ import org.springdoc.core.converters.ModelConverterRegistrar;
 import org.springdoc.core.converters.OAS31ModelConverter;
 import org.springdoc.core.converters.PolymorphicModelConverter;
 import org.springdoc.core.converters.PropertyCustomizingConverter;
+import org.springdoc.core.converters.PropertyNamingStrategyConverter;
 import org.springdoc.core.converters.ResponseSupportConverter;
 import org.springdoc.core.converters.SchemaPropertyDeprecatingConverter;
 import org.springdoc.core.converters.WebFluxSupportConverter;
@@ -115,8 +116,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
 import org.springframework.boot.autoconfigure.web.format.WebConversionService;
+import org.springframework.boot.data.autoconfigure.web.DataWebProperties;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -192,6 +193,11 @@ public class SpringDocConfiguration {
 		return SpringdocBeanFactoryConfigurer::initBeanFactoryPostProcessor;
 	}
 
+	/**
+	 * Init extra schemas object.
+	 *
+	 * @return the object
+	 */
 	@Bean
 	@Lazy(false)
 	@ConditionalOnProperty(name = SPRINGDOC_ENABLE_EXTRA_SCHEMAS, matchIfMissing = true)
@@ -287,6 +293,19 @@ public class SpringDocConfiguration {
 	@Lazy(false)
 	PolymorphicModelConverter polymorphicModelConverter(ObjectMapperProvider objectMapperProvider) {
 		return new PolymorphicModelConverter(objectMapperProvider);
+	}
+
+	/**
+	 * Property naming strategy converter property naming strategy converter.
+	 *
+	 * @param objectMapperProvider the object mapper provider
+	 * @return the property naming strategy converter
+	 */
+	@Bean
+	@ConditionalOnMissingBean
+	@Lazy(false)
+	PropertyNamingStrategyConverter propertyNamingStrategyConverter(ObjectMapperProvider objectMapperProvider) {
+		return new PropertyNamingStrategyConverter(objectMapperProvider);
 	}
 
 	/**
@@ -387,10 +406,10 @@ public class SpringDocConfiguration {
 	/**
 	 * Parameter builder generic parameter builder.
 	 *
-	 * @param propertyResolverUtils                        the property resolver utils
-	 * @param optionalWebConversionServiceProvider         the optional web conversion service provider
-	 * @param objectMapperProvider                         the object mapper provider
-	 * @param javadocProvider                              the javadoc provider
+	 * @param propertyResolverUtils                the property resolver utils
+	 * @param optionalWebConversionServiceProvider the optional web conversion service provider
+	 * @param objectMapperProvider                 the object mapper provider
+	 * @param javadocProvider                      the javadoc provider
 	 * @return the generic parameter builder
 	 */
 	@Bean
@@ -459,14 +478,16 @@ public class SpringDocConfiguration {
 	/**
 	 * Spring doc customizers spring doc customizers.
 	 *
-	 * @param openApiCustomizers                 the open api customizers
-	 * @param operationCustomizers               the operation customizers
-	 * @param routerOperationCustomizers         the router operation customizers
-	 * @param dataRestRouterOperationCustomizers the data rest router operation customizers
-	 * @param methodFilters                      the method filters
-	 * @param globalOpenApiCustomizers           the global open api customizers
-	 * @param globalOperationCustomizers         the global operation customizers
-	 * @param globalOpenApiMethodFilters         the global open api method filters
+	 * @param openApiCustomizers                           the open api customizers
+	 * @param operationCustomizers                         the operation customizers
+	 * @param routerOperationCustomizers                   the router operation customizers
+	 * @param dataRestRouterOperationCustomizers           the data rest router operation customizers
+	 * @param methodFilters                                the method filters
+	 * @param globalOpenApiCustomizers                     the global open api customizers
+	 * @param globalOperationCustomizers                   the global operation customizers
+	 * @param globalOpenApiMethodFilters                   the global open api method filters
+	 * @param optionalDelegatingMethodParameterCustomizers the optional delegating method parameter customizers
+	 * @param parameterCustomizers                         the parameter customizers
 	 * @return the spring doc customizers
 	 */
 	@Bean
@@ -588,7 +609,7 @@ public class SpringDocConfiguration {
 	/**
 	 * The type Spring doc spring data web properties provider.
 	 */
-	@ConditionalOnClass(SpringDataWebProperties.class)
+	@ConditionalOnClass(DataWebProperties.class)
 	static class SpringDocSpringDataWebPropertiesProvider {
 		/**
 		 * Spring data web properties provider spring data web properties provider.
@@ -599,7 +620,7 @@ public class SpringDocConfiguration {
 		@Bean
 		@ConditionalOnMissingBean
 		@Lazy(false)
-		SpringDataWebPropertiesProvider springDataWebPropertiesProvider(Optional<SpringDataWebProperties> optionalSpringDataWebProperties) {
+		SpringDataWebPropertiesProvider springDataWebPropertiesProvider(Optional<DataWebProperties> optionalSpringDataWebProperties) {
 			return new SpringDataWebPropertiesProvider(optionalSpringDataWebProperties);
 		}
 	}
@@ -718,8 +739,8 @@ public class SpringDocConfiguration {
 	MethodParameterPojoExtractor methodParameterPojoExtractor(SchemaUtils schemaUtils){
 		return new MethodParameterPojoExtractor(schemaUtils);
 	}
-
-	/**
+	
+		/**
 	 * Spring doc app initializer spring doc app initializer.
 	 *
 	 * @param springDocConfigProperties the spring doc config properties

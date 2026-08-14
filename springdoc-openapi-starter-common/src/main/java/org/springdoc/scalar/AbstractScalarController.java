@@ -135,7 +135,7 @@ public abstract class AbstractScalarController {
 	 * @param apiDocsPath the api docs path   
 	 * @return  the scalar properties
 	 */
-	private ScalarProperties configureProperties(ScalarProperties properties, String requestUrl, String apiDocsPath) {
+	private ScalarProperties configureProperties(ScalarProperties properties, String requestUrl, String apiDocsPath ) {
 		String url = buildApiDocsUrl(requestUrl, apiDocsPath);
 		properties.setUrl(url);
 		return properties;

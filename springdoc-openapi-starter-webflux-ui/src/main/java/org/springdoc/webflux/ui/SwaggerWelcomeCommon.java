@@ -34,12 +34,12 @@ import org.springdoc.core.properties.SpringDocConfigProperties;
 import org.springdoc.core.properties.SwaggerUiConfigParameters;
 import org.springdoc.core.properties.SwaggerUiConfigProperties;
 import org.springdoc.ui.AbstractSwaggerWelcome;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.util.ForwardedHeaderUtils;
 import reactor.core.publisher.Mono;
 
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.util.ForwardedHeaderUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
@@ -89,11 +89,6 @@ public abstract class SwaggerWelcomeCommon extends AbstractSwaggerWelcome {
 		}
 	}
 
-	@Override
-	protected void calculateUiRootPath(SwaggerUiConfigParameters swaggerUiConfigParameters, StringBuilder... sbUrls) {
-		super.calculateUiRootPath(swaggerUiConfigParameters, sbUrls);
-	}
-
 	/**
 	 * Gets swagger ui config.
 	 *
@@ -104,6 +99,11 @@ public abstract class SwaggerWelcomeCommon extends AbstractSwaggerWelcome {
 		SwaggerUiConfigParameters swaggerUiConfigParameters = new SwaggerUiConfigParameters(swaggerUiConfig);
 		this.buildFromCurrentContextPath(swaggerUiConfigParameters, exchange);
 		return swaggerUiConfigParameters.getConfigParameters();
+	}
+
+	@Override
+	protected void calculateUiRootPath(SwaggerUiConfigParameters swaggerUiConfigParameters, StringBuilder... sbUrls) {
+		super.calculateUiRootPath(swaggerUiConfigParameters, sbUrls);
 	}
 
 	/**

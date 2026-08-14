@@ -80,7 +80,7 @@ public abstract class MultipleOpenApiResource extends AbstractMultipleOpenApiRes
 					operationParser,
 					springDocConfigProperties, springDocProviders,
 					new SpringDocCustomizers(Optional.of(item.getOpenApiCustomizers()), Optional.of(item.getOperationCustomizers()),
-							Optional.of(item.getRouterOperationCustomizers()), Optional.of(item.getOpenApiMethodFilters()), Optional.empty(),Optional.empty())
+							Optional.of(item.getRouterOperationCustomizers()), Optional.of(item.getOpenApiMethodFilters()), Optional.empty(), Optional.empty())
 
 			);
 		else
@@ -91,7 +91,7 @@ public abstract class MultipleOpenApiResource extends AbstractMultipleOpenApiRes
 					operationParser,
 					springDocConfigProperties, springDocProviders,
 					new SpringDocCustomizers(Optional.of(item.getOpenApiCustomizers()), Optional.of(item.getOperationCustomizers()),
-							Optional.of(item.getRouterOperationCustomizers()), Optional.of(item.getOpenApiMethodFilters()),Optional.empty(),Optional.empty())
+							Optional.of(item.getRouterOperationCustomizers()), Optional.of(item.getOpenApiMethodFilters()), Optional.empty(), Optional.empty())
 			);
 	}
 

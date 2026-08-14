@@ -56,9 +56,9 @@ public class PropertyResolverUtils {
 	private static final Logger LOGGER = LoggerFactory.getLogger(PropertyResolverUtils.class);
 
 	/**
-	 * The constant LINE_SPLIT_PATTERN.
+	 * The constant NEWLINE_PATTERN.
 	 */
-	private static final Pattern LINE_SPLIT_PATTERN = Pattern.compile("\\r?\\n");
+	private static final Pattern NEWLINE_PATTERN = Pattern.compile("\\r?\\n");
 
 	/**
 	 * The Factory.
@@ -123,15 +123,14 @@ public class PropertyResolverUtils {
 	 * If the input text is {@code null}, the method returns {@code null}.
 	 *
 	 * @param text The original string with possible leading indentation.
-	 * @return The string with the smallest common leading indentation removed from each line,
-	 * or {@code null} if the input text is {@code null}.
+	 * @return The string with the smallest common leading indentation removed from each line, or {@code null} if the input text is {@code null}.
 	 */
 	public String trimIndent(String text) {
 		if (text == null) {
 			return null;
 		}
 		final String newLine = "\n";
-		String[] lines = LINE_SPLIT_PATTERN.split(text);
+		String[] lines = NEWLINE_PATTERN.split(text);
 		int minIndent = resolveMinIndent(lines);
 		try {
 			return Arrays.stream(lines)

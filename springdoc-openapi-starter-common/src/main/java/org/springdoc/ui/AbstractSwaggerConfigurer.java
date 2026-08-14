@@ -1,42 +1,17 @@
-/*
- *
- *  *
- *  *  *
- *  *  *  *
- *  *  *  *  *
- *  *  *  *  *  * Copyright 2019-2026 the original author or authors.
- *  *  *  *  *  *
- *  *  *  *  *  * Licensed under the Apache License, Version 2.0 (the "License");
- *  *  *  *  *  * you may not use this file except in compliance with the License.
- *  *  *  *  *  * You may obtain a copy of the License at
- *  *  *  *  *  *
- *  *  *  *  *  *      https://www.apache.org/licenses/LICENSE-2.0
- *  *  *  *  *  *
- *  *  *  *  *  * Unless required by applicable law or agreed to in writing, software
- *  *  *  *  *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  *  *  *  *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  *  *  *  *  * See the License for the specific language governing permissions and
- *  *  *  *  *  * limitations under the License.
- *  *  *  *  *
- *  *  *  *
- *  *  *
- *  *
- *
- */
-
 package org.springdoc.ui;
 
-
-import java.util.Arrays;
-
 import org.springdoc.core.properties.SwaggerUiConfigProperties;
-
 import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.web.util.pattern.PathPattern;
 import org.springframework.web.util.pattern.PathPatternParser;
 import org.springframework.web.util.pattern.PatternParseException;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static org.springdoc.core.utils.Constants.ALL_PATTERN;
+import static org.springdoc.core.utils.Constants.INDEX_PAGE_PATTERN;
 import static org.springdoc.core.utils.Constants.SWAGGER_INITIALIZER_PATTERN;
 import static org.springdoc.core.utils.Constants.SWAGGER_UI_PREFIX;
 import static org.springdoc.core.utils.Constants.SWAGGER_UI_WEBJAR_NAME;
@@ -82,6 +57,7 @@ public abstract class AbstractSwaggerConfigurer {
 	 */
 	protected SwaggerResourceHandlerConfig[] getSwaggerHandlerConfigs() {
 		String swaggerUiPattern = getUiRootPath() + SWAGGER_UI_PREFIX + ALL_PATTERN;
+		String swaggerUiIndexPattern = combinePatterns(swaggerUiPattern, INDEX_PAGE_PATTERN);
 		String swaggerUiInitializerPattern = combinePatterns(swaggerUiPattern, SWAGGER_INITIALIZER_PATTERN);
 		String swaggerUiResourceLocation = WEBJARS_RESOURCE_LOCATION + SWAGGER_UI_WEBJAR_NAME + DEFAULT_PATH_SEPARATOR +
 				swaggerUiConfigProperties.getVersion() + DEFAULT_PATH_SEPARATOR;
@@ -91,7 +67,7 @@ public abstract class AbstractSwaggerConfigurer {
 						.setPatterns(swaggerUiPattern)
 						.setLocations(swaggerUiResourceLocation),
 				SwaggerResourceHandlerConfig.createUncached()
-						.setPatterns(swaggerUiInitializerPattern)
+						.setPatterns(swaggerUiIndexPattern, swaggerUiInitializerPattern)
 						.setLocations(swaggerUiResourceLocation)
 		};
 	}
@@ -105,6 +81,9 @@ public abstract class AbstractSwaggerConfigurer {
 		if (!springWebProperties.getResources().isAddMappings()) return new SwaggerResourceHandlerConfig[]{};
 
 		String swaggerUiWebjarPattern = combinePatterns(getWebjarsPathPattern(), SWAGGER_UI_WEBJAR_NAME_PATTERN) + ALL_PATTERN;
+		String swaggerUiWebjarIndexPattern = combinePatterns(swaggerUiWebjarPattern, INDEX_PAGE_PATTERN);
+		String swaggerUiWebjarVersionIndexPattern = combinePatterns(swaggerUiWebjarPattern,
+				swaggerUiConfigProperties.getVersion() + INDEX_PAGE_PATTERN);
 		String swaggerUiWebjarInitializerPattern = combinePatterns(swaggerUiWebjarPattern, SWAGGER_INITIALIZER_PATTERN);
 		String swaggerUiWebjarVersionInitializerPattern = combinePatterns(swaggerUiWebjarPattern,
 				swaggerUiConfigProperties.getVersion() + SWAGGER_INITIALIZER_PATTERN);
@@ -115,7 +94,8 @@ public abstract class AbstractSwaggerConfigurer {
 						.setPatterns(swaggerUiWebjarPattern)
 						.setLocations(swaggerUiWebjarResourceLocation),
 				SwaggerResourceHandlerConfig.createUncached()
-						.setPatterns(swaggerUiWebjarInitializerPattern, swaggerUiWebjarVersionInitializerPattern)
+						.setPatterns(swaggerUiWebjarIndexPattern, swaggerUiWebjarVersionIndexPattern,
+								swaggerUiWebjarInitializerPattern, swaggerUiWebjarVersionInitializerPattern)
 						.setLocations(swaggerUiWebjarResourceLocation)
 		};
 	}
@@ -179,10 +159,10 @@ public abstract class AbstractSwaggerConfigurer {
 	 * @param patterns       the patterns to match.
 	 * @param locations      the locations to use.
 	 */
-	protected record SwaggerResourceHandlerConfig(boolean cacheResources, String[] patterns, String[] locations) {
+	protected record SwaggerResourceHandlerConfig(boolean cacheResources, List<String> patterns, List<String> locations) {
 
 		private SwaggerResourceHandlerConfig(boolean cacheResources) {
-			this(cacheResources, new String[]{}, new String[]{});
+			this(cacheResources, new ArrayList<>(), new ArrayList<>());
 		}
 
 		/**
@@ -193,7 +173,15 @@ public abstract class AbstractSwaggerConfigurer {
 		 * @return the updated config.
 		 */
 		public SwaggerResourceHandlerConfig setPatterns(String... patterns) {
-			return new SwaggerResourceHandlerConfig(cacheResources, patterns, locations);
+			return new SwaggerResourceHandlerConfig(cacheResources, Arrays.asList(patterns), locations);
+		}
+
+		/**
+		 *
+		 * @return String array of patterns
+		 */
+		public String[] patternsArray() {
+			return patterns.toArray(new String[0]);
 		}
 
 		/**
@@ -204,7 +192,15 @@ public abstract class AbstractSwaggerConfigurer {
 		 * @return the updated config.
 		 */
 		public SwaggerResourceHandlerConfig setLocations(String... locations) {
-			return new SwaggerResourceHandlerConfig(cacheResources, patterns, locations);
+			return new SwaggerResourceHandlerConfig(cacheResources, patterns, Arrays.asList(locations));
+		}
+
+		/**
+		 *
+		 * @return String array of locations
+		 */
+		public String[] locationsArray() {
+			return locations.toArray(new String[0]);
 		}
 
 		/**

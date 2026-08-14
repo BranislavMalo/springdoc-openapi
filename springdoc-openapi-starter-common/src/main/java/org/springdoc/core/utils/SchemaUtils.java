@@ -6,14 +6,23 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
+import io.swagger.v3.oas.models.SpecVersion;
 import io.swagger.v3.oas.models.media.Schema;
-import jakarta.validation.Constraint;
 import jakarta.validation.OverridesAttribute;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -51,15 +60,15 @@ public class SchemaUtils {
 	/**
 	 * The constant ANNOTATIONS_FOR_REQUIRED.
 	 */
-	// using string litterals to support both validation-api v1 and v2
-	public static final List<String> ANNOTATIONS_FOR_REQUIRED = List.of("NotNull", "NonNull", "NotBlank",
+// using string litterals to support both validation-api v1 and v2
+	public static final List<String> ANNOTATIONS_FOR_REQUIRED = Arrays.asList("NotNull", "NonNull", "NotBlank",
 			"NotEmpty");
 
 	/**
 	 * The constant ANNOTATIONS_FOR_NULLABLE.
 	 */
 	public static final List<String> ANNOTATIONS_FOR_NULLABLE =
-			List.of("Nullable");
+			Arrays.asList("Nullable");
 	/**
 	 * The constant OPTIONAL_TYPES.
 	 */
@@ -111,9 +120,9 @@ public class SchemaUtils {
 	 * @param schema    the schema
 	 * @param parameter the parameter
 	 * @return the boolean or {@code null}
-	 * @see Parameter#required()
-	 * @see io.swagger.v3.oas.annotations.media.Schema#required()
-	 * @see io.swagger.v3.oas.annotations.media.Schema#requiredMode()
+	 * @see Parameter#required() Parameter#required()
+	 * @see io.swagger.v3.oas.annotations.media.Schema#required() io.swagger.v3.oas.annotations.media.Schema#required()
+	 * @see io.swagger.v3.oas.annotations.media.Schema#requiredMode() io.swagger.v3.oas.annotations.media.Schema#requiredMode()
 	 */
 	@Nullable
 	public static Boolean swaggerRequired(@Nullable io.swagger.v3.oas.annotations.media.Schema schema,
@@ -163,13 +172,17 @@ public class SchemaUtils {
 		}
 
 		// @Nullable/@NotNull
-		Boolean ann = nullableFromAnnotations(field);
-		if (ann != null) return ann;
+		Optional<Boolean> ann = nullableFromAnnotations(field);
+		if (ann.isPresent()) {
+			return ann.get();
+		}
 
 		// Kotlin nullability
 		if (kotlinUtilsOptional.isPresent() && isKotlinDeclaringClass(field)) {
-			Boolean kotlin = kotlinNullability(field);
-			if (kotlin != null) return kotlin;
+			Optional<Boolean> kotlin = kotlinNullability(field);
+			if (kotlin.isPresent()) {
+				return kotlin.get();
+			}
 		}
 
 		return JAVA_FIELD_NULLABLE_DEFAULT;
@@ -182,9 +195,9 @@ public class SchemaUtils {
 	 * @param schema    the schema
 	 * @param parameter the parameter
 	 * @return the boolean
-	 * @see Parameter#required()
-	 * @see io.swagger.v3.oas.annotations.media.Schema#required()
-	 * @see io.swagger.v3.oas.annotations.media.Schema#requiredMode()
+	 * @see Parameter#required() Parameter#required()
+	 * @see io.swagger.v3.oas.annotations.media.Schema#required() io.swagger.v3.oas.annotations.media.Schema#required()
+	 * @see io.swagger.v3.oas.annotations.media.Schema#requiredMode() io.swagger.v3.oas.annotations.media.Schema#requiredMode()
 	 */
 	public boolean fieldRequired(Field field, io.swagger.v3.oas.annotations.media.Schema schema, Parameter parameter) {
 		Boolean swagger = swaggerRequired(schema, parameter);
@@ -204,16 +217,14 @@ public class SchemaUtils {
 		// Kotlin logic
 		if (kotlinUtilsOptional.isPresent()  && isKotlinDeclaringClass(field)) {
 			if (fieldNullable(field)) return false;
-			Boolean hasDefault = kotlinConstructorParamIsOptional(field);
-			if (Boolean.TRUE.equals(hasDefault)) return false;
-			return true;
+			return kotlinConstructorParamIsOptional(field)
+					.map(isOptional -> !isOptional)
+					.orElse(true);
 		}
 
 		// Jackson @JsonProperty(required = true)
 		JsonProperty jp = getJsonProperty(field);
-		if (jp != null && jp.required()) return true;
-
-		return false;
+		return jp != null && jp.required();
 	}
 
 	/**
@@ -296,12 +307,34 @@ public class SchemaUtils {
 				schema.setMaximum(BigDecimal.valueOf(((Range) anno).max()));
 			}
 		});
+		fixOAS31ExclusiveConstraints(schema);
 		if (schema!=null && annotatedNotNull(annotations)) {
 			String specVersion = schema.getSpecVersion().name();
 			if (!"V30".equals(specVersion)) {
 				schema.setNullable(false);
 			}
 		}
+	}
+
+	/**
+	 * Whether the given annotations contain a bean-validation constraint that
+	 * {@link #applyValidationsToSchema(Schema, List, String)} would apply to a schema.
+	 *
+	 * @param annotations the annotations
+	 * @return true if at least one validation constraint is present
+	 */
+	public static boolean hasValidationConstraints(List<Annotation> annotations) {
+		if (annotations == null) {
+			return false;
+		}
+		return annotations.stream().anyMatch(anno -> {
+			Class<? extends Annotation> type = anno.annotationType();
+			return type == Positive.class || type == PositiveOrZero.class
+					|| type == Negative.class || type == NegativeOrZero.class
+					|| type == Min.class || type == Max.class
+					|| type == DecimalMin.class || type == DecimalMax.class
+					|| type == Size.class || type == Pattern.class || type == Range.class;
+		});
 	}
 
 	/**
@@ -354,15 +387,15 @@ public class SchemaUtils {
 	 * @param field the field
 	 * @return the boolean
 	 */
-	private static Boolean nullableFromAnnotations(Field field) {
-		if (hasNullableAnnotation(field)) return true;
-		if (hasNotNullAnnotation(field)) return false;
+	private static Optional<Boolean> nullableFromAnnotations(Field field) {
+		if (hasNullableAnnotation(field)) return Optional.of(true);
+		if (hasNotNullAnnotation(field)) return Optional.of(false);
 		Method getter = findGetter(field);
 		if (getter != null) {
-			if (hasNullableAnnotation(getter)) return true;
-			if (hasNotNullAnnotation(getter)) return false;
+			if (hasNullableAnnotation(getter)) return Optional.of(true);
+			if (hasNotNullAnnotation(getter)) return Optional.of(false);
 		}
-		return null;
+		return Optional.empty();
 	}
 
 	/**
@@ -470,7 +503,7 @@ public class SchemaUtils {
 					}
 				}
 			}
-		} catch (Throwable ignored) {
+		} catch (Exception ignored) {
 			// best-effort only
 		}
 		return false;
@@ -503,7 +536,7 @@ public class SchemaUtils {
 		try {
 			JsonProperty jp = p.getAnnotation(JsonProperty.class);
 			return jp != null && expected.equals(jp.value());
-		} catch (Throwable ignored) {
+		} catch (Exception ignored) {
 			return false;
 		}
 	}
@@ -523,7 +556,9 @@ public class SchemaUtils {
 		for (String m : names) {
 			try {
 				return f.getDeclaringClass().getMethod(m);
-			} catch (NoSuchMethodException ignored) {}
+			} catch (NoSuchMethodException ignored) {
+				// best-effort only
+			}
 		}
 		return null;
 	}
@@ -540,5 +575,29 @@ public class SchemaUtils {
 		Method g = findGetter(f);
 		if (g != null) return g.getAnnotation(JsonProperty.class);
 		return null;
+	}
+
+	/**
+	 * Swagger-core 2.2.49 introduced so that {@link Positive} and {@link Negative} are introspected.
+	 * It does not correctly use the fact that exclusiveMinimum/exclusiveMaximum are values in OAS31.
+	 * <p>
+	 * Tracked under <a href="https://github.com/swagger-api/swagger-core/issues/5170">swagger-core#5170</a>.
+	 *
+	 * @param schema the schema to fix
+	 */
+	public static void fixOAS31ExclusiveConstraints(Schema<?> schema) {
+		if (schema == null) {
+			return;
+		}
+		if (schema.getSpecVersion().equals(SpecVersion.V31)) {
+			if (schema.getExclusiveMaximumValue() != null && schema.getMaximum() != null
+				&& schema.getMaximum().compareTo(schema.getExclusiveMaximumValue()) == 0) {
+				schema.setMaximum(null);
+			}
+			if (schema.getExclusiveMinimumValue() != null && schema.getMinimum() != null &&
+				schema.getMinimum().compareTo(schema.getExclusiveMinimumValue()) == 0) {
+				schema.setMinimum(null);
+			}
+		}
 	}
 }

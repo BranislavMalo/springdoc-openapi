@@ -52,7 +52,7 @@ public class HelloRouter {
 
 						.POST("/titi", HANDLER_FUNCTION, builder -> builder.operationId("create-user-group-special")).build();
 
-        return RouterFunctions.nest(RequestPredicates.path("/users"), nest(path("/test"), nest(path("/greeter"),
+		return RouterFunctions.nest(RequestPredicates.path("/users"), nest(path("/test"), nest(path("/greeter"),
 				SpringdocRouteBuilder.route()
 						.GET(HANDLER_FUNCTION, builder -> builder.operationId("get-users"))
 						.POST("/special", HANDLER_FUNCTION, builder -> builder.operationId("create-user-special"))

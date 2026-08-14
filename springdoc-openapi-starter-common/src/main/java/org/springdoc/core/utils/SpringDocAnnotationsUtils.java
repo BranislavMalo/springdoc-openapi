@@ -95,13 +95,13 @@ public class SpringDocAnnotationsUtils extends AnnotationsUtils {
 	/**
 	 * The constant ANNOTATIONS_TO_IGNORE.
 	 */
-	private static final List<Class> ANNOTATIONS_TO_IGNORE = Collections.synchronizedList(new ArrayList<>(3));
+	private static final List<Class> ANNOTATIONS_TO_IGNORE = Collections.synchronizedList(new ArrayList<>());
 
 	/**
 	 * The reusable context
 	 */
 	private static final ThreadLocal<Map<Boolean, ModelConverterContext>> MODEL_CONVERTER_CONTEXT_MAP = ThreadLocal.withInitial(HashMap::new);
-	
+
 	static {
 		ANNOTATIONS_TO_IGNORE.add(Hidden.class);
 		ANNOTATIONS_TO_IGNORE.add(JsonIgnore.class);
@@ -151,7 +151,7 @@ public class SpringDocAnnotationsUtils extends AnnotationsUtils {
 				.jsonViewAnnotation(jsonView)
 				.ctxAnnotations(annotations);
 		ResolvedSchema resolvedSchema = resolveAsResolvedSchema(openapi31, annotatedType);
-
+		
 		if (resolvedSchema != null) {
 			Map<String, Schema> schemaMap = resolvedSchema.referencedSchemas;
 			if (!CollectionUtils.isEmpty(schemaMap) && components != null) {
@@ -165,17 +165,17 @@ public class SpringDocAnnotationsUtils extends AnnotationsUtils {
 						// If we've seen this schema before but find later it should be polymorphic,
 						// replace the existing schema with this richer version.
 						Schema existingSchema = componentSchemas.get(entry.getKey());
-						if (existingSchema == null ||
+						if (!componentSchemas.containsKey(entry.getKey()) ||
 								(!entry.getValue().getClass().equals(existingSchema.getClass()) && entry.getValue().getAllOf() != null)) {
 							componentSchemas.put(entry.getKey(), entry.getValue());
 						}
-						else {
+						else if (componentSchemas.containsKey(entry.getKey()) && schemaMap.containsKey(entry.getKey())) {
 							// Check to merge polymorphic types
 							Set<Schema> existingAllOf = new LinkedHashSet<>();
 							if (existingSchema.getAllOf() != null)
 								existingAllOf.addAll(existingSchema.getAllOf());
-							if (entry.getValue().getAllOf() != null) {
-								existingAllOf.addAll(entry.getValue().getAllOf());
+							if (schemaMap.get(entry.getKey()).getAllOf() != null) {
+								existingAllOf.addAll(schemaMap.get(entry.getKey()).getAllOf());
 								existingSchema.setAllOf(new ArrayList<>(existingAllOf));
 							}
 						}
@@ -285,15 +285,20 @@ public class SpringDocAnnotationsUtils extends AnnotationsUtils {
 	 */
 	@SuppressWarnings("unchecked")
 	public static boolean isAnnotationToIgnore(MethodParameter parameter) {
-		boolean annotationFirstCheck = ANNOTATIONS_TO_IGNORE.stream().anyMatch(annotation ->
+		List<Class> snapshot;
+		synchronized (ANNOTATIONS_TO_IGNORE) {
+			snapshot = new ArrayList<>(ANNOTATIONS_TO_IGNORE);
+		}
+		boolean annotationFirstCheck = snapshot.stream().anyMatch(annotation ->
 				(parameter.getParameterIndex() != -1 && AnnotationUtils.findAnnotation(parameter.getMethod().getParameters()[parameter.getParameterIndex()], annotation) != null)
 						|| AnnotationUtils.findAnnotation(parameter.getParameterType(), annotation) != null);
 
-		boolean annotationSecondCheck = Arrays.stream(parameter.getParameterAnnotations()).anyMatch(annotation ->
-				ANNOTATIONS_TO_IGNORE.contains(annotation.annotationType())
-						|| ANNOTATIONS_TO_IGNORE.stream().anyMatch(annotationToIgnore -> annotation.annotationType().getDeclaredAnnotation(annotationToIgnore) != null));
+		if (annotationFirstCheck)
+			return true;
 
-		return annotationFirstCheck || annotationSecondCheck;
+		return Arrays.stream(parameter.getParameterAnnotations()).anyMatch(annotation ->
+				snapshot.contains(annotation.annotationType())
+						|| snapshot.stream().anyMatch(annotationToIgnore -> annotation.annotationType().getDeclaredAnnotation(annotationToIgnore) != null));
 	}
 
 	/**
@@ -303,7 +308,11 @@ public class SpringDocAnnotationsUtils extends AnnotationsUtils {
 	 * @return the boolean
 	 */
 	public static boolean isAnnotationToIgnore(Type type) {
-		return ANNOTATIONS_TO_IGNORE.stream().anyMatch(
+		List<Class> snapshot;
+		synchronized (ANNOTATIONS_TO_IGNORE) {
+			snapshot = new ArrayList<>(ANNOTATIONS_TO_IGNORE);
+		}
+		return snapshot.stream().anyMatch(
 				annotation -> (type instanceof Class
 						&& AnnotationUtils.findAnnotation((Class<?>) type, annotation) != null));
 	}
@@ -504,7 +513,7 @@ public class SpringDocAnnotationsUtils extends AnnotationsUtils {
 	 */
 	public static Object resolveDefaultValue(String defaultValueStr, ObjectMapper objectMapper) {
 		Object defaultValue = null;
-		if (StringUtils.isNotEmpty(defaultValueStr) && !io.swagger.v3.oas.annotations.media.Schema.DEFAULT_SENTINEL.equals(defaultValueStr)) {
+		if (StringUtils.isNotEmpty(defaultValueStr)) {
 			try {
 				defaultValue = objectMapper.readTree(defaultValueStr);
 			}
@@ -544,11 +553,12 @@ public class SpringDocAnnotationsUtils extends AnnotationsUtils {
 	 * @param javadocProvider the javadoc provider
 	 */
 	public static void clearCache(JavadocProvider javadocProvider) {
-		if (javadocProvider != null)
+		if (javadocProvider != null) {
 			javadocProvider.clearCache();
-		MODEL_CONVERTER_CONTEXT_MAP.remove();;
+		}
+		MODEL_CONVERTER_CONTEXT_MAP.remove();
 	}
-	
+
 	/**
 	 * Resolve as resolved schema resolved schema.
 	 *

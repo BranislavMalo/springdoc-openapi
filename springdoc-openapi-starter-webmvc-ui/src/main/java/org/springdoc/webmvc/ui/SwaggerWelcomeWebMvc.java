@@ -54,7 +54,7 @@ public class SwaggerWelcomeWebMvc extends SwaggerWelcomeCommon {
 	 * The Spring web provider.
 	 */
 	private final ObjectProvider<SpringWebProvider> springWebProvider;
-	
+
 	/**
 	 * The Mvc servlet path.
 	 */

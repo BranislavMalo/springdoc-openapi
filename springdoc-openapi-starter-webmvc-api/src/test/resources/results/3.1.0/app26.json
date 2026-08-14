@@ -64,7 +64,7 @@
         "type": "object",
         "properties": {
           "thing": {
-            "type" : "object",
+            "type": "string",
             "description": "Hello",
             "oneOf": [
               {

@@ -17,6 +17,28 @@
     }
   ],
   "paths": {
+    "/test": {
+      "get": {
+        "tags": [
+          "hello-controller"
+        ],
+        "summary": "Demo 2 http entity.",
+        "description": "Demo 2 http entity.",
+        "operationId": "demo2",
+        "responses": {
+          "200": {
+            "description": "the http entity",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/persons": {
       "get": {
         "tags": [
@@ -40,28 +62,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          }
-        }
-      }
-    },
-    "/test": {
-      "get": {
-        "tags": [
-          "hello-controller"
-        ],
-        "summary": "Demo 2 http entity.",
-        "description": "Demo 2 http entity.",
-        "operationId": "demo2",
-        "responses": {
-          "200": {
-            "description": "the http entity",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
           }
         }
       }

@@ -53,22 +53,22 @@
         "type": "object",
         "properties": {
           "field11true": {
-            "type": "string",
-            "nullable": true
+            "nullable": true,
+            "type": "string"
           },
           "field10true": {
             "type": "string"
           },
           "field01false": {
-            "type": "string",
-            "nullable": true
+            "nullable": true,
+            "type": "string"
           },
           "field00false": {
             "type": "string"
           },
           "fieldN1false": {
-            "type": "string",
-            "nullable": true
+            "nullable": true,
+            "type": "string"
           },
           "fieldN0true": {
             "type": "string"

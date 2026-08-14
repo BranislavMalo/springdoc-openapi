@@ -173,7 +173,7 @@ public class GenericResponseService implements ApplicationContextAware {
 	 * @param components             the components
 	 * @param apiResponsesOp         the api responses op
 	 * @param methodAttributes       the method attributes
-	 * @param apiResponseAnnotation  the api response annotation
+	 * @param apiResponseAnnotation the api response annotations
 	 * @param apiResponse            the api response
 	 * @param openapi31              the openapi 31
 	 */
@@ -192,11 +192,10 @@ public class GenericResponseService implements ApplicationContextAware {
 			if (optionalContent.isPresent()) {
 				Content newContent = optionalContent.get();
 				if (methodAttributes.isMethodOverloaded() && existingContent != null) {
-					for (String mediaTypeStr : methodAttributes.getMethodProduces()) {
-						io.swagger.v3.oas.models.media.MediaType mediaType = newContent.get(mediaTypeStr);
-						if (mediaType != null && mediaType.getSchema() != null)
-							mergeSchema(existingContent, mediaType.getSchema(), mediaTypeStr);
-					}
+					Arrays.stream(methodAttributes.getMethodProduces()).filter(mediaTypeStr -> (newContent.get(mediaTypeStr) != null)).forEach(mediaTypeStr -> {
+						if (newContent.get(mediaTypeStr).getSchema() != null)
+							mergeSchema(existingContent, newContent.get(mediaTypeStr).getSchema(), mediaTypeStr);
+					});
 					apiResponse.content(existingContent);
 				}
 				else
@@ -210,6 +209,7 @@ public class GenericResponseService implements ApplicationContextAware {
 			optionalContent.ifPresent(apiResponse::content);
 		}
 	}
+
 
 	/**
 	 * Sets description.
@@ -433,7 +433,8 @@ public class GenericResponseService implements ApplicationContextAware {
 			// available
 			String httpCode = evaluateResponseStatus(methodParameter.getMethod(), Objects.requireNonNull(methodParameter.getMethod()).getClass(), true);
 			if (Objects.nonNull(httpCode)) {
-				apiResponse = methodAttributes.getGenericMapResponse().getOrDefault(httpCode, new ApiResponse());
+				apiResponse = methodAttributes.getGenericMapResponse().containsKey(httpCode) ? methodAttributes.getGenericMapResponse().get(httpCode)
+						: new ApiResponse();
 				buildApiResponses(components, methodParameter, apiResponsesOp, methodAttributes, httpCode, apiResponse, true);
 			}
 		}
@@ -582,8 +583,7 @@ public class GenericResponseService implements ApplicationContextAware {
 	 */
 	private void setContent(String[] methodProduces, Content content,
 			io.swagger.v3.oas.models.media.MediaType mediaType) {
-		for (String mediaTypeStr : methodProduces)
-			content.addMediaType(mediaTypeStr, mediaType);
+		Arrays.stream(methodProduces).forEach(mediaTypeStr -> content.addMediaType(mediaTypeStr, mediaType));
 	}
 
 	/**
@@ -623,8 +623,7 @@ public class GenericResponseService implements ApplicationContextAware {
 			Schema<?> schemaN = calculateSchema(components, type,
 					methodAttributes.getJsonViewAnnotation(), getParameterAnnotations(methodParameter));
 			if (schemaN != null && ArrayUtils.isNotEmpty(methodAttributes.getMethodProduces()))
-				for (String mediaTypeStr : methodAttributes.getMethodProduces())
-					mergeSchema(existingContent, schemaN, mediaTypeStr);
+				Arrays.stream(methodAttributes.getMethodProduces()).forEach(mediaTypeStr -> mergeSchema(existingContent, schemaN, mediaTypeStr));
 		}
 		if (springDocConfigProperties.isOverrideWithGenericResponse()
 				&& methodParameter.getExecutable().isAnnotationPresent(ExceptionHandler.class)) {
@@ -657,7 +656,7 @@ public class GenericResponseService implements ApplicationContextAware {
 	private boolean useReturnTypeSchema(MethodAttributes methodAttributes, String httpCode) {
 		return methodAttributes.getUseReturnTypeSchema().getOrDefault(httpCode, false);
 	}
-
+	
 	/**
 	 * Evaluate response status string.
 	 *
@@ -730,10 +729,9 @@ public class GenericResponseService implements ApplicationContextAware {
 					})
 					.toList();
 
-			Map<String, ApiResponse> genericApiResponseMap = new LinkedHashMap<>();
-			for (ControllerAdviceInfo info : controllerAdviceInfosInThisBean) {
-				genericApiResponseMap.putAll(info.getApiResponseMap());
-			}
+			Map<String, ApiResponse> genericApiResponseMap = controllerAdviceInfosInThisBean.stream()
+					.map(ControllerAdviceInfo::getApiResponseMap)
+					.collect(LinkedHashMap::new, Map::putAll, Map::putAll);
 
 			List<ControllerAdviceInfo> controllerAdviceInfosNotInThisBean = controllerAdviceInfos.stream()
 					.filter(controllerAdviceInfo ->
@@ -752,7 +750,9 @@ public class GenericResponseService implements ApplicationContextAware {
 
 					for (Class<?> exception : exceptions) {
 						if (isGlobalException(exception) ||
-								matchesAnyMethodException(methodExceptions, exception)) {
+								Arrays.stream(methodExceptions).anyMatch(methodException ->
+										methodException.isAssignableFrom(exception) ||
+												exception.isAssignableFrom(methodException))) {
 
 							addToGenericMap = true;
 							break;
@@ -760,8 +760,7 @@ public class GenericResponseService implements ApplicationContextAware {
 					}
 
 					if (addToGenericMap || exceptions.isEmpty()) {
-						methodAdviceInfo.getApiResponses().forEach((key, apiResponse) ->
-								genericApiResponseMap.putIfAbsent(key, apiResponse));
+						methodAdviceInfo.getApiResponses().forEach(genericApiResponseMap::putIfAbsent);
 					}
 				}
 			}
@@ -836,21 +835,6 @@ public class GenericResponseService implements ApplicationContextAware {
 		return exceptions;
 	}
 
-
-	/**
-	 * Matches any method exception boolean.
-	 *
-	 * @param methodExceptions the method exceptions
-	 * @param exception        the exception
-	 * @return the boolean
-	 */
-	private boolean matchesAnyMethodException(Class<?>[] methodExceptions, Class<?> exception) {
-		for (Class<?> methodException : methodExceptions) {
-			if (methodException.isAssignableFrom(exception) || exception.isAssignableFrom(methodException))
-				return true;
-		}
-		return false;
-	}
 
 	/**
 	 * Is unchecked exception boolean.

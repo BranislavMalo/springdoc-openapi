@@ -30,12 +30,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.JavaType;
@@ -65,12 +64,12 @@ public class PolymorphicModelConverter implements ModelConverter {
 	/**
 	 * The constant PARENT_TYPES_TO_IGNORE.
 	 */
-	private static final Set<String> PARENT_TYPES_TO_IGNORE = Collections.synchronizedSet(new HashSet<>());
+	private static final Set<String> PARENT_TYPES_TO_IGNORE = new CopyOnWriteArraySet<>();
 
 	/**
-	 * The constant PARENT_TYPES_TO_IGNORE.
+	 * The constant TYPES_TO_SKIP.
 	 */
-	private static final Set<String> TYPES_TO_SKIP = Collections.synchronizedSet(new HashSet<>());
+	private static final Set<String> TYPES_TO_SKIP = new CopyOnWriteArraySet<>();
 
 	static {
 		PARENT_TYPES_TO_IGNORE.add("JsonSchema");
@@ -110,37 +109,41 @@ public class PolymorphicModelConverter implements ModelConverter {
 	 */
 	private Schema<?> getResolvedSchema(JavaType javaType, Schema<?> resolvedSchema) {
 		if (resolvedSchema instanceof ObjectSchema && resolvedSchema.getProperties() != null) {
-			if (resolvedSchema.getProperties().containsKey(javaType.getRawClass().getName())) {
-				resolvedSchema = resolvedSchema.getProperties().get(javaType.getRawClass().getName());
+			Schema<?> found = resolvedSchema.getProperties().get(javaType.getRawClass().getName());
+			if (found != null) {
+				resolvedSchema = found;
 			}
-			else if (resolvedSchema.getProperties().containsKey(javaType.getRawClass().getSimpleName())) {
-				resolvedSchema = resolvedSchema.getProperties().get(javaType.getRawClass().getSimpleName());
+			else {
+				found = resolvedSchema.getProperties().get(javaType.getRawClass().getSimpleName());
+				if (found != null) {
+					resolvedSchema = found;
+				}
 			}
 		}
 		return resolvedSchema;
 	}
 
-    /**
-     * Removes _links from allOf child schemas to prevent duplication.
-     * In allOf composition, child schemas (allOf[1+]) should not redefine
-     * inherited properties like _links that come from the parent (allOf[0]).
-     *
-     * @param composedSchema the composed schema with allOf structure
-     */
-    private void removeLinksFromAllOfChild(ComposedSchema composedSchema) {
-        List<Schema> allOf = composedSchema.getAllOf();
-        if (allOf != null && allOf.size() > 1) {
-            // allOf[0] is the parent schema (first element in allOf)
-            // allOf[1+] are the child's own properties (second element onwards in allOf)
-            for (int i = 1; i < allOf.size(); i++) {
-                Schema childSchema = allOf.get(i);
-                if (childSchema != null && childSchema.getProperties() != null) {
-                    // Remove _links (inherited from parent)
-                    childSchema.getProperties().remove("_links");
-                }
-            }
-        }
-    }
+	/**
+	 * Removes _links from allOf child schemas to prevent duplication.
+	 * In allOf composition, child schemas (allOf[1+]) should not redefine
+	 * inherited properties like _links that come from the parent (allOf[0]).
+	 *
+	 * @param composedSchema the composed schema with allOf structure
+	 */
+	private void removeLinksFromAllOfChild(ComposedSchema composedSchema) {
+		List<Schema> allOf = composedSchema.getAllOf();
+		if (allOf != null && allOf.size() > 1) {
+			// allOf[0] is the parent schema (first element in allOf)
+			// allOf[1+] are the child's own properties (second element onwards in allOf)
+			for (int i = 1; i < allOf.size(); i++) {
+				Schema childSchema = allOf.get(i);
+				if (childSchema != null && childSchema.getProperties() != null) {
+					// Remove _links (inherited from parent)
+					childSchema.getProperties().remove("_links");
+				}
+			}
+		}
+	}
 
 	@Override
 	public Schema resolve(AnnotatedType type, ModelConverterContext context, Iterator<ModelConverter> chain) {
@@ -170,13 +173,12 @@ public class PolymorphicModelConverter implements ModelConverter {
 				Schema<?> resolvedSchema = chain.next().resolve(type, context, chain);
 				resolvedSchema = getResolvedSchema(javaType, resolvedSchema);
 
-                if (resolvedSchema instanceof ComposedSchema composedSchema &&
-                        composedSchema.getAllOf() != null &&
-                        !composedSchema.getAllOf().isEmpty()) {
-                    removeLinksFromAllOfChild(composedSchema);
-                }
-
-                if (resolvedSchema == null || resolvedSchema.get$ref() == null) {
+				if (resolvedSchema instanceof ComposedSchema composedSchema &&
+						composedSchema.getAllOf() != null &&
+						!composedSchema.getAllOf().isEmpty()) {
+					removeLinksFromAllOfChild(composedSchema);
+				}
+				if (resolvedSchema == null || resolvedSchema.get$ref() == null) {
 					return resolvedSchema;
 				}
 				if (resolvedSchema.get$ref().contains(Components.COMPONENTS_SCHEMAS_REF)) {
@@ -203,22 +205,26 @@ public class PolymorphicModelConverter implements ModelConverter {
 	private Schema composePolymorphicSchema(AnnotatedType type, Schema schema, Collection<Schema> schemas) {
 		String ref = schema.get$ref();
 		List<Schema> composedSchemas = findComposedSchemas(ref, schemas);
-		if (composedSchemas.isEmpty()) return schema;
-        ComposedSchema result = new ComposedSchema();
-		if (isConcreteClass(type)) result.addOneOfItem(schema);
+		if (composedSchemas.isEmpty()) {
+			return schema;
+		}
+		ComposedSchema result = new ComposedSchema();
+		if (isConcreteClass(type)) {
+			result.addOneOfItem(schema);
+		}
 		JavaType javaType = springDocObjectMapper.jsonMapper().constructType(type.getType());
 		Class<?> clazz = javaType.getRawClass();
-		if (TYPES_TO_SKIP.stream().noneMatch(typeToSkip -> typeToSkip.equals(clazz.getSimpleName())))
+		if (!TYPES_TO_SKIP.contains(clazz.getSimpleName()))
 			composedSchemas.forEach(result::addOneOfItem);
 
-        // Remove _links from result (composed schema) to prevent duplication
-        if (result.getOneOf() != null) {
-            result.getOneOf().stream()
-                    .filter(s -> s.getProperties() != null)
-                    .forEach(s -> s.getProperties().remove("_links"));
-        }
+		// Remove _links from result (composed schema) to prevent duplication
+		if (result.getOneOf() != null) {
+			result.getOneOf().stream()
+					.filter(s -> s.getProperties() != null)
+					.forEach(s -> s.getProperties().remove("_links"));
+		}
 
-        return result;
+		return result;
 	}
 
 	/**
@@ -297,6 +303,10 @@ public class PolymorphicModelConverter implements ModelConverter {
 		/**
 		 * Retrieves an annotation of the specified type from either the serialization or
 		 * deserialization property definition (field, getter, setter), returning the first available match.
+		 *
+		 * @param <A>  the type parameter
+		 * @param acls the acls
+		 * @return the any annotation
 		 */
 		public <A extends Annotation> A getAnyAnnotation(Class<A> acls) {
 			A anyForSerializationAnnotation = getAnyAnnotation(forSerialization, acls);
@@ -308,6 +318,10 @@ public class PolymorphicModelConverter implements ModelConverter {
 		/**
 		 * Checks if any annotation of the specified type exists across serialization
 		 * or deserialization property definitions.
+		 *
+		 * @param <A>  the type parameter
+		 * @param acls the acls
+		 * @return the boolean
 		 */
 		public <A extends Annotation> boolean isAnyAnnotated(Class<A> acls) {
 			return getAnyAnnotation(acls) != null;
@@ -315,6 +329,8 @@ public class PolymorphicModelConverter implements ModelConverter {
 
 		/**
 		 * Type determined from the primary member for the property being built.
+		 *
+		 * @return the primary type
 		 */
 		public JavaType getPrimaryType() {
 			JavaType forSerializationType = null;

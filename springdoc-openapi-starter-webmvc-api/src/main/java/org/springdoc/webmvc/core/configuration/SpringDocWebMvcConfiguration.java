@@ -26,13 +26,17 @@
 
 package org.springdoc.webmvc.core.configuration;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springdoc.core.configuration.SpringDocConfiguration;
+import org.springdoc.core.configuration.SpringDocWebServerConfiguration;
 import org.springdoc.core.customizers.SpringDocCustomizers;
 import org.springdoc.core.discoverer.SpringDocParameterNameDiscoverer;
 import org.springdoc.core.extractor.MethodParameterPojoExtractor;
 import org.springdoc.core.properties.SpringDocConfigProperties;
+import org.springdoc.core.properties.SwaggerUiConfigProperties;
 import org.springdoc.core.providers.ActuatorProvider;
 import org.springdoc.core.providers.SpringDocProviders;
 import org.springdoc.core.providers.SpringWebProvider;
@@ -42,32 +46,36 @@ import org.springdoc.core.service.GenericResponseService;
 import org.springdoc.core.service.OpenAPIService;
 import org.springdoc.core.service.OperationService;
 import org.springdoc.core.service.RequestBodyService;
+import org.springdoc.core.utils.Constants;
 import org.springdoc.core.utils.PropertyResolverUtils;
 import org.springdoc.webmvc.api.OpenApiActuatorResource;
 import org.springdoc.webmvc.api.OpenApiWebMvcResource;
+import org.springdoc.webmvc.api.SpringDocApiVersionStrategy;
 import org.springdoc.webmvc.core.providers.ActuatorWebMvcProvider;
 import org.springdoc.webmvc.core.providers.RouterFunctionWebMvcProvider;
 import org.springdoc.webmvc.core.providers.SpringWebMvcProvider;
 import org.springdoc.webmvc.core.service.RequestService;
 
 import org.springframework.beans.factory.ObjectFactory;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ConditionalOnManagementPort;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementPortType;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
-import org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.webmvc.actuate.endpoint.web.WebMvcEndpointHandlerMapping;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.web.accept.ApiVersionStrategy;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.function.RouterFunction;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import static org.springdoc.core.utils.Constants.SPRINGDOC_ENABLED;
@@ -138,13 +146,47 @@ public class SpringDocWebMvcConfiguration {
 	/**
 	 * Spring web provider spring web provider.
 	 *
+	 * @param apiVersionStrategyOptional the api version strategy optional
 	 * @return the spring web provider
 	 */
 	@Bean
 	@ConditionalOnMissingBean
 	@Lazy(false)
-	SpringWebProvider springWebProvider() {
-		return new SpringWebMvcProvider();
+	SpringWebProvider springWebProvider(Optional<ApiVersionStrategy> apiVersionStrategyOptional) {
+		return new SpringWebMvcProvider(apiVersionStrategyOptional);
+	}
+
+	/**
+	 * Wraps the {@link ApiVersionStrategy} on all {@link RequestMappingHandlerMapping} beans
+	 * to gracefully handle springdoc endpoint paths during API version resolution.
+	 *
+	 * @param apiVersionStrategyOptional        the api version strategy optional
+	 * @param springDocConfigProperties         the spring doc config properties
+	 * @param swaggerUiConfigPropertiesOptional the swagger ui config properties optional
+	 * @param handlerMappings                   the request mapping handler mappings
+	 * @return the smart initializing singleton
+	 */
+	@Bean
+	@Lazy(false)
+	SmartInitializingSingleton springDocApiVersionCustomizer(
+			Optional<ApiVersionStrategy> apiVersionStrategyOptional,
+			SpringDocConfigProperties springDocConfigProperties,
+			Optional<SwaggerUiConfigProperties> swaggerUiConfigPropertiesOptional,
+			List<RequestMappingHandlerMapping> handlerMappings) {
+		return () -> apiVersionStrategyOptional.ifPresent(strategy -> {
+			List<String> springDocPaths = new ArrayList<>();
+			springDocPaths.add(springDocConfigProperties.getApiDocs().getPath());
+			swaggerUiConfigPropertiesOptional.ifPresent(swaggerUiConfig -> {
+				springDocPaths.add(swaggerUiConfig.getPath());
+				springDocPaths.add(Constants.SWAGGER_UI_PREFIX);
+			});
+			for (RequestMappingHandlerMapping mapping : handlerMappings) {
+				ApiVersionStrategy original = mapping.getApiVersionStrategy();
+				if (original != null) {
+					mapping.setApiVersionStrategy(new SpringDocApiVersionStrategy(original, springDocPaths));
+				}
+			}
+		});
 	}
 
 	/**
@@ -194,7 +236,7 @@ public class SpringDocWebMvcConfiguration {
 		/**
 		 * Actuator provider actuator provider.
 		 *
-		 * @param serverProperties           the server properties
+		 * @param springDocWebServerContext  the server context
 		 * @param springDocConfigProperties  the spring doc config properties
 		 * @param managementServerProperties the management server properties
 		 * @param webEndpointProperties      the web endpoint properties
@@ -204,11 +246,11 @@ public class SpringDocWebMvcConfiguration {
 		@ConditionalOnMissingBean
 		@ConditionalOnExpression("${springdoc.show-actuator:false} or ${springdoc.use-management-port:false}")
 		@Lazy(false)
-		ActuatorProvider actuatorProvider(ServerProperties serverProperties,
+		ActuatorProvider actuatorProvider(SpringDocWebServerConfiguration.SpringDocWebServerContext springDocWebServerContext,
 				SpringDocConfigProperties springDocConfigProperties,
 				Optional<ManagementServerProperties> managementServerProperties,
 				Optional<WebEndpointProperties> webEndpointProperties) {
-			return new ActuatorWebMvcProvider(serverProperties,
+			return new ActuatorWebMvcProvider(springDocWebServerContext,
 					springDocConfigProperties,
 					managementServerProperties,
 					webEndpointProperties);

@@ -44,8 +44,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -297,7 +297,9 @@ public class OpenAPIService implements ApplicationContextAware {
 		if (!isServersPresent && serverBaseUrl != null)        // default server value
 		{
 			Server server = new Server().url(serverBaseUrl).description(DEFAULT_SERVER_DESCRIPTION);
-			openAPI.setServers(new ArrayList<>(Collections.singletonList(server)));
+			List<Server> servers = new ArrayList<>();
+			servers.add(server);
+			openAPI.setServers(servers);
 		}
 	}
 
@@ -539,20 +541,20 @@ public class OpenAPIService implements ApplicationContextAware {
 	 * @return An array of {@link Webhooks} annotations found in the given classes.
 	 */
 	public Webhooks[] getWebhooks(Class<?>[] classes) {
-		List<Webhooks> allWebhooks = new ArrayList<>();
+        List<Webhooks> allWebhooks = new ArrayList<>();
 
-		for (Class<?> clazz : classes) {
-			// Class-level annotations
-			collectWebhooksFromElement(clazz, allWebhooks);
+        for (Class<?> clazz : classes) {
+            // Class-level annotations
+            collectWebhooksFromElement(clazz, allWebhooks);
 
-			// Method-level annotations
-			for (Method method : clazz.getDeclaredMethods()) {
-				collectWebhooksFromElement(method, allWebhooks);
-			}
-		}
+            // Method-level annotations
+            for (Method method : clazz.getDeclaredMethods()) {
+                collectWebhooksFromElement(method, allWebhooks);
+            }
+        }
 
-		return allWebhooks.toArray(new Webhooks[0]);
-	}
+        return allWebhooks.toArray(new Webhooks[0]);
+    }
 
 
 	/**
@@ -564,39 +566,39 @@ public class OpenAPIService implements ApplicationContextAware {
 	 * @return An array of classes related to webhooks.
 	 */
 	public Class<?>[] getWebhooksClasses() {
-		Set<Class<?>> allWebhookClassesToScan = new HashSet<>();
+        Set<Class<?>> allWebhookClassesToScan = new HashSet<>();
 
-		// First: scan Spring-managed beans
-		Map<String, Object> beans = context.getBeansWithAnnotation(Webhooks.class);
+        // First: scan Spring-managed beans
+        Map<String, Object> beans = context.getBeansWithAnnotation(Webhooks.class);
 
-		for (Object bean : beans.values()) {
-			Class<?> beanClass = bean.getClass();
-			allWebhookClassesToScan.add(beanClass);
-		}
+        for (Object bean : beans.values()) {
+            Class<?> beanClass = bean.getClass();
+            allWebhookClassesToScan.add(beanClass);
+        }
 
-		// Fallback: classpath scanning
-		ClassPathScanningCandidateComponentProvider scanner =
-				new ClassPathScanningCandidateComponentProvider(false);
-		scanner.addIncludeFilter(new AnnotationTypeFilter(Webhooks.class));
-		scanner.addIncludeFilter(new AnnotationTypeFilter(Webhook.class));
+        // Fallback: classpath scanning
+        ClassPathScanningCandidateComponentProvider scanner =
+                new ClassPathScanningCandidateComponentProvider(false);
+        scanner.addIncludeFilter(new AnnotationTypeFilter(Webhooks.class));
+        scanner.addIncludeFilter(new AnnotationTypeFilter(Webhook.class));
 
-		if (AutoConfigurationPackages.has(context)) {
-			for (String basePackage : AutoConfigurationPackages.get(context)) {
-				Set<BeanDefinition> candidates = scanner.findCandidateComponents(basePackage);
-				for (BeanDefinition bd : candidates) {
-					try {
-						Class<?> clazz = Class.forName(bd.getBeanClassName());
-						allWebhookClassesToScan.add(clazz);
-					}
-					catch (ClassNotFoundException e) {
-						LOGGER.error("Class not found in classpath: {}", e.getMessage());
-					}
-				}
-			}
-		}
+        if (AutoConfigurationPackages.has(context)) {
+            for (String basePackage : AutoConfigurationPackages.get(context)) {
+                Set<BeanDefinition> candidates = scanner.findCandidateComponents(basePackage);
+                for (BeanDefinition bd : candidates) {
+                    try {
+                        Class<?> clazz = Class.forName(bd.getBeanClassName());
+                        allWebhookClassesToScan.add(clazz);
+                    }
+                    catch (ClassNotFoundException e) {
+                        LOGGER.error("Class not found in classpath: {}", e.getMessage());
+                    }
+                }
+            }
+        }
 
-		return allWebhookClassesToScan.toArray(new Class<?>[0]);
-	}
+        return allWebhookClassesToScan.toArray(new Class<?>[0]);
+    }
 
 
 	/**
@@ -709,7 +711,7 @@ public class OpenAPIService implements ApplicationContextAware {
 
 		if (extensions != null) {
 			Map<String, Object> extensionsResolved = propertyResolverUtils.resolveExtensions(locale, extensions);
-			if (propertyResolverUtils.isOpenapi31()) {
+			if (propertyResolverUtils.isOpenapi31()){
 				extensionsResolved.forEach(info::addExtension31);
 				info.setExtensions(extensionsResolved);
 			}

@@ -168,11 +168,10 @@ public class RequestBodyService {
 			if (optionalContent.isPresent() && existingContent != null) {
 				Content newContent = optionalContent.get();
 				if (methodAttributes.isMethodOverloaded()) {
-					for (String mediaTypeStr : methodAttributes.getMethodProduces()) {
-						io.swagger.v3.oas.models.media.MediaType mediaType = newContent.get(mediaTypeStr);
-						if (mediaType != null && mediaType.getSchema() != null)
-							mergeSchema(existingContent, mediaType.getSchema(), mediaTypeStr);
-					}
+					Arrays.stream(methodAttributes.getMethodProduces()).filter(mediaTypeStr -> (newContent.get(mediaTypeStr) != null)).forEach(mediaTypeStr -> {
+						if (newContent.get(mediaTypeStr).getSchema() != null)
+							mergeSchema(existingContent, newContent.get(mediaTypeStr).getSchema(), mediaTypeStr);
+					});
 					requestBodyObject.content(existingContent);
 				}
 				else
@@ -256,9 +255,8 @@ public class RequestBodyService {
 	 */
 	public void calculateRequestBodyInfo(Components components, MethodAttributes methodAttributes,
 			ParameterInfo parameterInfo, RequestBodyInfo requestBodyInfo) {
-		RequestBody requestBody = requestBodyInfo.getRequestBody();
+		RequestBody requestBody;
 		MethodParameter methodParameter = parameterInfo.getMethodParameter();
-
 
 		RequestPart requestPart = methodParameter.getParameterAnnotation(RequestPart.class);
 		String paramName = null;
@@ -279,18 +277,16 @@ public class RequestBodyService {
 	/**
 	 * Build request body.
 	 *
-	 * @param requestBodyDoc   the request body doc
+	 * @param requestBodyDoc      the request body
 	 * @param components       the components
 	 * @param methodAttributes the method attributes
 	 * @param parameterInfo    the parameter info
 	 * @param requestBodyInfo  the request body info
 	 * @return the request body
 	 */
-	private RequestBody buildRequestBody(io.swagger.v3.oas.annotations.parameters.RequestBody requestBodyDoc,
-										 Components components,
-										 MethodAttributes methodAttributes,
-										 ParameterInfo parameterInfo,
-										 RequestBodyInfo requestBodyInfo) {
+	private RequestBody buildRequestBody(io.swagger.v3.oas.annotations.parameters.RequestBody requestBodyDoc, Components components,
+			MethodAttributes methodAttributes,
+			ParameterInfo parameterInfo, RequestBodyInfo requestBodyInfo) {
 		RequestBody requestBody = requestBodyInfo.getRequestBody();
 		if (requestBody == null) {
 			requestBody = new RequestBody();
@@ -374,7 +370,7 @@ public class RequestBodyService {
 				}
 				else {
 					String encodingContentType = parameterContent.keySet().iterator().next();
-					if (StringUtils.isNotBlank(encodingContentType)) {
+					if(StringUtils.isNotBlank(encodingContentType)) {
 						return Map.of(parameterInfo.getpName(), new Encoding().contentType(encodingContentType));
 					}
 				}

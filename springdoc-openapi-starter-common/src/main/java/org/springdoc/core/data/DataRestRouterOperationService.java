@@ -26,6 +26,7 @@
 
 package org.springdoc.core.data;
 
+
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -284,7 +285,7 @@ public class DataRestRouterOperationService {
 			MethodResourceMapping methodResourceMapping, HandlerMethod handlerMethod,
 			RequestMethod requestMethod, ResourceMetadata resourceMetadata, String
 			operationPath, ControllerType controllerType) {
-		RouterOperation routerOperation = new RouterOperation(operationPath, new RequestMethod[] { requestMethod }, null, null, null, null);
+		RouterOperation routerOperation = new RouterOperation(operationPath, new RequestMethod[] { requestMethod }, null, null, null, null,null);
 		MethodAttributes methodAttributes = new MethodAttributes(springDocConfigProperties.getDefaultConsumesMediaType(), springDocConfigProperties.getDefaultProducesMediaType(), dataRestRepository.getLocale());
 		methodAttributes.calculateConsumesProduces(handlerMethod.getMethod());
 		routerOperation.setConsumes(methodAttributes.getMethodConsumes());

@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -40,9 +41,9 @@ import io.swagger.v3.core.util.PrimitiveType;
 import io.swagger.v3.oas.models.media.ComposedSchema;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springdoc.api.AbstractOpenApiResource;
@@ -76,7 +77,7 @@ public class SpringDocUtils {
 	 * The constant LOGGER.
 	 */
 	private static final Logger LOGGER = LoggerFactory.getLogger(SpringDocUtils.class);
-
+	
 	/**
 	 * Instantiates a new Spring doc utils.
 	 */
@@ -187,6 +188,8 @@ public class SpringDocUtils {
 	/**
 	 * Fix additionalProperties incorrectly set to {"type": "null"} when @Nullable
 	 * propagates from a Map field to its Object value type (resolved as "any type" = {}).
+	 * <p>
+	 * Tracked under <a href="https://github.com/swagger-api/swagger-core/issues/5115">swagger-core#5115</a>.
 	 *
 	 * @param schema the schema to fix
 	 */
@@ -198,10 +201,9 @@ public class SpringDocUtils {
 		if (additionalProperties instanceof Schema<?> addPropSchema) {
 			boolean isNullOnlyType = false;
 			Set<String> types = addPropSchema.getTypes();
-			if (types != null && types.size() == 1 && types.contains("null")) {
-				isNullOnlyType = true;
-			}
-			else if (types == null && "null".equals(addPropSchema.getType())) {
+			boolean onlyNullTypeOAS31 = types != null && types.size() == 1 && types.contains("null");
+			boolean onlyNullTypeOAS30 = types == null && "null".equals(addPropSchema.getType());
+			if (onlyNullTypeOAS31 || onlyNullTypeOAS30) {
 				isNullOnlyType = true;
 			}
 			if (isNullOnlyType && addPropSchema.get$ref() == null
@@ -211,8 +213,26 @@ public class SpringDocUtils {
 			}
 		}
 		if (schema.getProperties() != null) {
-			schema.getProperties().values().forEach(prop -> fixNullOnlyAdditionalProperties((Schema<?>) prop));
+			schema.getProperties().values().forEach(SpringDocUtils::fixNullOnlyAdditionalProperties);
 		}
+	}
+
+	/**
+	 * Removes {@code null}-keyed entries from a schema's properties map (and its nested
+	 * schemas). When swagger-core resolves a {@code @JsonUnwrapped} member (for example
+	 * Spring HATEOAS {@code EntityModel.getContent()} with HAL disabled), the unwrapped
+	 * property schemas may have a {@code null} name and get inserted into the properties map
+	 * under a {@code null} key. Such a key cannot be serialized by Jackson, which fails the
+	 * whole OpenAPI document with {@code "Null key for a Map not allowed in JSON"}.
+	 *
+	 * @param schema the schema to fix
+	 */
+	public static void removeNullKeyProperties(Schema<?> schema) {
+		if (schema == null || schema.getProperties() == null) {
+			return;
+		}
+		schema.getProperties().keySet().removeIf(Objects::isNull);
+		schema.getProperties().values().forEach(SpringDocUtils::removeNullKeyProperties);
 	}
 
 	/**
@@ -567,6 +587,8 @@ public class SpringDocUtils {
 
 	/**
 	 * Init extra schemas.
+	 *
+	 * @return the spring doc utils
 	 */
 	public SpringDocUtils initExtraSchemas() {
 		customClasses().put("java.time.Duration", PrimitiveType.STRING);
@@ -605,12 +627,14 @@ public class SpringDocUtils {
 		return this;
 	}
 
+
 	/**
 	 * Clone via json t.
 	 *
 	 * @param <T>        the type parameter
 	 * @param source     the source
 	 * @param targetType the target type
+	 * @param mapper     the mapper
 	 * @return the t
 	 */
 	public static  <T> T cloneViaJson(Object source, Class<T> targetType, ObjectMapper mapper) {
@@ -621,7 +645,7 @@ public class SpringDocUtils {
 		catch (IOException e) {
 			LOGGER.warn("Json Processing Exception occurred: {}", e.getMessage());
 			@SuppressWarnings("unchecked")
-			T fallback = (T) source; 
+			T fallback = (T) source;
 			return fallback;
 		}
 	}
@@ -632,6 +656,7 @@ public class SpringDocUtils {
 	 * @param <T>     the type parameter
 	 * @param source  the source
 	 * @param typeRef the type ref
+	 * @param mapper  the mapper
 	 * @return the t
 	 */
 	public static  <T> T cloneViaJson(Object source, TypeReference<T> typeRef, ObjectMapper mapper) {
@@ -646,7 +671,6 @@ public class SpringDocUtils {
 			return fallback;
 		}
 	}
-
 }
 
 

@@ -3,12 +3,13 @@ package test.org.springdoc.api.v30.app11;
 
 import org.junit.jupiter.api.Test;
 import org.springdoc.core.utils.Constants;
+import test.org.springdoc.api.v30.AbstractSpringDocTest;
+
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
-import test.org.springdoc.api.v30.AbstractSpringDocTest;
 
 import static org.hamcrest.Matchers.is;
 import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;

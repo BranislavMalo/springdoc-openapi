@@ -1,6 +1,7 @@
 package test.org.springdoc.api.v31.app13;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
 import org.springframework.hateoas.RepresentationModel;
 
 /**

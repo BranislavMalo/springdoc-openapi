@@ -202,7 +202,9 @@ public class DataRestOperationService {
 			HandlerMethod repositoryHandlerMethod = new HandlerMethod(methodResourceMapping.getMethod().getDeclaringClass(), methodResourceMapping.getMethod());
 			MethodParameter[] parameters = repositoryHandlerMethod.getMethodParameters();
 			for (MethodParameter methodParameter : parameters) {
-				dataRestRequestService.buildCommonParameters(openAPI, requestMethod, methodAttributes, operation, new String[] { methodParameter.getParameterName() }, new MethodParameter[] { methodParameter }, dataRestRepository);
+				Param paramAnnotation = methodParameter.getParameterAnnotation(Param.class);
+				String paramName = (paramAnnotation != null) ? paramAnnotation.value() : methodParameter.getParameterName();
+				dataRestRequestService.buildCommonParameters(openAPI, requestMethod, methodAttributes, operation, new String[] { paramName }, new MethodParameter[] { methodParameter }, dataRestRepository);
 			}
 		}
 
@@ -215,9 +217,8 @@ public class DataRestOperationService {
 				Parameter parameter = getParameterFromAnnotations(openAPI, methodAttributes, method, pName);
 				if (parameter == null) {
 					parameter = new Parameter().name(pName).in(ParameterIn.QUERY.toString()).schema(schema);
-					operation.addParametersItem(parameter);
 				}
-				else if (CollectionUtils.isEmpty(operation.getParameters()))
+				if (CollectionUtils.isEmpty(operation.getParameters()))
 					operation.addParametersItem(parameter);
 				else
 					GenericParameterService.mergeParameter(operation.getParameters(), parameter);

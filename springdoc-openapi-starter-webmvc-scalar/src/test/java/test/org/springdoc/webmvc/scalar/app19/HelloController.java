@@ -24,9 +24,24 @@
  *  
  */
 
+<<<<<<<< HEAD:springdoc-openapi-starter-webflux-api/src/test/java/test/org/springdoc/api/v31/app192/SpringDocApp192Test.java
+package test.org.springdoc.api.v31.app192;
+========
 package test.org.springdoc.webmvc.scalar.app19;
+>>>>>>>> upstream/main:springdoc-openapi-starter-webmvc-scalar/src/test/java/test/org/springdoc/webmvc/scalar/app19/HelloController.java
 
+import test.org.springdoc.api.v31.AbstractSpringDocTest;
 
+<<<<<<<< HEAD:springdoc-openapi-starter-webflux-api/src/test/java/test/org/springdoc/api/v31/app192/SpringDocApp192Test.java
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+
+public class SpringDocApp192Test extends AbstractSpringDocTest {
+
+	@SpringBootApplication
+	@ComponentScan(basePackages = { "org.springdoc", "test.org.springdoc.api.v31.app192" })
+	static class SpringDocTestApp {}
+========
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 
@@ -42,4 +57,5 @@ public class HelloController {
 
 	}
 
+>>>>>>>> upstream/main:springdoc-openapi-starter-webmvc-scalar/src/test/java/test/org/springdoc/webmvc/scalar/app19/HelloController.java
 }

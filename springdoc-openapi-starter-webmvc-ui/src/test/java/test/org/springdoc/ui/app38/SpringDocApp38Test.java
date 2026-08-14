@@ -19,10 +19,9 @@
 package test.org.springdoc.ui.app38;
 
 import org.junit.jupiter.api.Test;
-import test.org.springdoc.ui.AbstractSpringDocTest;
-
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.test.context.TestPropertySource;
+import test.org.springdoc.ui.AbstractSpringDocTest;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;

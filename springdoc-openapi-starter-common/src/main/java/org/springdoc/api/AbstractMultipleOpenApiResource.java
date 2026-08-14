@@ -46,7 +46,7 @@ import org.springframework.beans.factory.ObjectFactory;
 /**
  * The type Abstract multiple open api resource.
  *
- * @param <R> the platform-specific open api resource type
+ * @param <R> the type of OpenAPI resource
  * @author bnasslahsen
  */
 public abstract class AbstractMultipleOpenApiResource<R extends AbstractOpenApiResource> implements InitializingBean {
@@ -144,7 +144,7 @@ public abstract class AbstractMultipleOpenApiResource<R extends AbstractOpenApiR
 	}
 
 	/**
-	 * Build a platform-specific open api resource.
+	 * Build open api resource.
 	 *
 	 * @param item the grouped open api
 	 * @return the open api resource

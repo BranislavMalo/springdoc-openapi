@@ -41,7 +41,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ConditionalOnManagementPort;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementPortType;
-import org.springframework.boot.actuate.endpoint.web.reactive.WebFluxEndpointHandlerMapping;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -49,10 +48,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.boot.autoconfigure.web.WebProperties;
-import org.springframework.boot.autoconfigure.web.reactive.WebFluxProperties;
+import org.springframework.boot.webflux.actuate.endpoint.web.WebFluxEndpointHandlerMapping;
+import org.springframework.boot.webflux.autoconfigure.WebFluxProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.web.reactive.accept.ApiVersionStrategy;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
 import static org.springdoc.core.utils.Constants.DEFAULT_SWAGGER_UI_ACTUATOR_PATH;
@@ -85,7 +86,7 @@ public class SwaggerConfig implements WebFluxConfigurer {
 	@ConditionalOnMissingBean
 	@ConditionalOnProperty(name = SPRINGDOC_USE_MANAGEMENT_PORT, havingValue = "false", matchIfMissing = true)
 	@Lazy(false)
-	SwaggerWelcomeWebFlux swaggerWelcome(SwaggerUiConfigProperties swaggerUiConfig, SpringDocConfigProperties springDocConfigProperties, ObjectProvider<SpringWebProvider> springWebProvider) {
+	SwaggerWelcomeWebFlux swaggerWelcome(SwaggerUiConfigProperties swaggerUiConfig, SpringDocConfigProperties springDocConfigProperties, ObjectProvider <SpringWebProvider> springWebProvider) {
 		return new SwaggerWelcomeWebFlux(swaggerUiConfig, springDocConfigProperties, springWebProvider);
 	}
 
@@ -163,8 +164,8 @@ public class SwaggerConfig implements WebFluxConfigurer {
 	@Bean
 	@ConditionalOnMissingBean
 	@Lazy(false)
-	SpringWebProvider springWebProvider() {
-		return new SpringWebFluxProvider();
+	SpringWebProvider springWebProvider(Optional<ApiVersionStrategy> apiVersionStrategyOptional) {
+		return new SpringWebFluxProvider(apiVersionStrategyOptional);
 	}
 
 	/**
@@ -187,7 +188,7 @@ public class SwaggerConfig implements WebFluxConfigurer {
 		return new SwaggerResourceResolver(swaggerUiConfigProperties);
 	}
 
-	/**
+		/**
 	 * Spring doc swagger initializer spring doc swagger initializer.
 	 *
 	 * @param swaggerUiConfigProperties the swagger ui config properties

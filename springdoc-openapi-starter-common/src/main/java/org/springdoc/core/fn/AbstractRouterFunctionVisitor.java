@@ -77,6 +77,12 @@ public class AbstractRouterFunctionVisitor {
 	protected Map<Integer, List<String>> nestedPaths = new LinkedHashMap<>();
 
 	/**
+	 * The Nested versions, keyed by nesting level, set by {@code version(...)} predicates
+	 * declared on {@code nest(...)} calls. Sticky for all routes within the nest level.
+	 */
+	protected Map<Integer, String> nestedVersions = new LinkedHashMap<>();
+
+	/**
 	 * The Is or.
 	 */
 	protected boolean isOr;
@@ -90,6 +96,11 @@ public class AbstractRouterFunctionVisitor {
 	 * The Attributes.
 	 */
 	protected Map<String, Object> attributes = new LinkedHashMap<>();
+
+	/**
+	 * The Version.
+	 */
+	private String version;
 
 	/**
 	 * The Level.
@@ -176,6 +187,24 @@ public class AbstractRouterFunctionVisitor {
 			queryParams.put(name, value);
 		else
 			currentRouterFunctionDatas.forEach(routerFunctionData -> routerFunctionData.addQueryParams(name, value));
+	}
+
+	/**
+	 * Version.
+	 *
+	 * @param version the version
+	 */
+	public void version(String version) {
+		// When visited as a nest(...) predicate, currentRouterFunctionDatas is null
+		// (cleared by commonStartNested) and the version must apply to every route in the
+		// nested block. When visited as a per-route predicate, currentRouterFunctionDatas
+		// has been freshly initialized by route(...) and the version is one-shot.
+		if (this.currentRouterFunctionDatas == null && this.level > 0) {
+			this.nestedVersions.put(this.level, version);
+		}
+		else {
+			this.version = version;
+		}
 	}
 
 	/**
@@ -267,6 +296,7 @@ public class AbstractRouterFunctionVisitor {
 	 */
 	protected void commonEndNested() {
 		nestedPaths.remove(this.level);
+		nestedVersions.remove(this.level);
 		this.level--;
 	}
 
@@ -282,9 +312,25 @@ public class AbstractRouterFunctionVisitor {
 	 * Common route.
 	 */
 	protected void commonRoute() {
+		String currentVersion = (this.version != null) ? this.version : currentNestedVersion();
+		this.version = null;
 		this.routerFunctionDatas.addAll(currentRouterFunctionDatas);
-		currentRouterFunctionDatas.forEach(routerFunctionData -> routerFunctionData.addAttributes(this.attributes));
+		currentRouterFunctionDatas.forEach(routerFunctionData -> {
+			routerFunctionData.addAttributes(this.attributes);
+			if (currentVersion != null) {
+				routerFunctionData.setVersion(currentVersion);
+			}
+		});
 		this.attributes = new HashMap<>();
+	}
+
+	private String currentNestedVersion() {
+		if (nestedVersions.isEmpty()) {
+			return null;
+		}
+		// Innermost nest wins
+		int innermost = nestedVersions.keySet().stream().mapToInt(Integer::intValue).max().orElse(-1);
+		return nestedVersions.get(innermost);
 	}
 
 	/**

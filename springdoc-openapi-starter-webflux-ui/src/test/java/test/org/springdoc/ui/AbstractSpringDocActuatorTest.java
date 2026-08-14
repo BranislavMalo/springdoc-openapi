@@ -29,6 +29,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.boot.test.web.server.LocalManagementPort;
 import org.springframework.web.reactive.function.client.WebClient;
 
+
 public abstract class AbstractSpringDocActuatorTest extends AbstractCommonTest {
 
 	protected WebClient webClient;

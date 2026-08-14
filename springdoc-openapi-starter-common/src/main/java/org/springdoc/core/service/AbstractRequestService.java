@@ -36,8 +36,21 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.security.Principal;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,12 +66,12 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.parameters.RequestBody;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springdoc.core.customizers.DelegatingMethodParameterCustomizer;
 import org.springdoc.core.customizers.ParameterCustomizer;
+import org.springdoc.core.customizers.PropertyCustomizer;
 import org.springdoc.core.customizers.SpringDocCustomizers;
 import org.springdoc.core.discoverer.SpringDocParameterNameDiscoverer;
 import org.springdoc.core.extractor.DelegatingMethodParameter;
@@ -111,11 +124,19 @@ public abstract class AbstractRequestService {
 	 * The constant LOGGER.
 	 */
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRequestService.class);
-	
+
+	/**
+	 * The constant ACTUATOR_PKGS.
+	 */
+	private static final List<String> ACTUATOR_PKGS = List.of(
+			"org.springframework.boot.webmvc.actuate",
+			"org.springframework.boot.webflux.actuate"
+	);
+
 	/**
 	 * The constant PARAM_TYPES_TO_IGNORE.
 	 */
-	private static final List<Class<?>> PARAM_TYPES_TO_IGNORE = Collections.synchronizedList(new ArrayList<>(19));
+	private static final List<Class<?>> PARAM_TYPES_TO_IGNORE = new CopyOnWriteArrayList<>();
 
 	static {
 		PARAM_TYPES_TO_IGNORE.add(WebRequest.class);
@@ -190,7 +211,7 @@ public abstract class AbstractRequestService {
 	 */
 	protected AbstractRequestService(GenericParameterService parameterBuilder, RequestBodyService requestBodyService,
 			SpringDocCustomizers springDocCustomizers,
-			SpringDocParameterNameDiscoverer localSpringDocParameterNameDiscoverer, 
+			SpringDocParameterNameDiscoverer localSpringDocParameterNameDiscoverer,
 			MethodParameterPojoExtractor methodParameterPojoExtractor) {
 		super();
 		this.parameterBuilder = parameterBuilder;
@@ -245,20 +266,31 @@ public abstract class AbstractRequestService {
 	 */
 	@SuppressWarnings("unchecked")
 	public static Collection<Parameter> getHeaders(MethodAttributes methodAttributes, Map<ParameterId, Parameter> map) {
+		Map<String, String> versionDefaultMap = null;
+		if (methodAttributes.getSpringDocVersionStrategy() != null)
+			versionDefaultMap = methodAttributes.getSpringDocVersionStrategy().getVersionDefaultMap();
 		for (Entry<String, String> entry : methodAttributes.getHeaders().entrySet()) {
 			StringSchema schema = new StringSchema();
-			if (StringUtils.isNotEmpty(entry.getValue()))
-				schema.addEnumItem(entry.getValue());
-			Parameter parameter = new Parameter().in(ParameterIn.HEADER.toString()).name(entry.getKey()).schema(schema);
+			String headerName = entry.getKey();
+			String headerValue = entry.getValue();
+			if (StringUtils.isNotEmpty(headerValue))
+				schema.addEnumItem(headerValue);
+			String defaultValue = null;
+			if(versionDefaultMap != null) {
+				defaultValue = versionDefaultMap.get(headerName);
+				schema._default(defaultValue);
+			}
+			Parameter parameter = new Parameter().in(ParameterIn.HEADER.toString()).name(headerName).schema(schema);
 			ParameterId parameterId = new ParameterId(parameter);
-			Parameter existing = map.get(parameterId);
-			if (existing != null) {
-				parameter = existing;
+			if (map.containsKey(parameterId)) {
+				parameter = map.get(parameterId);
 				List existingEnum = null;
 				if (parameter.getSchema() != null && !CollectionUtils.isEmpty(parameter.getSchema().getEnum()))
 					existingEnum = parameter.getSchema().getEnum();
-				if (StringUtils.isNotEmpty(entry.getValue()) && (existingEnum == null || !existingEnum.contains(entry.getValue())))
-					parameter.getSchema().addEnumItemObject(entry.getValue());
+				if (StringUtils.isNotEmpty(headerValue) && (existingEnum == null || !existingEnum.contains(headerValue)))
+					parameter.getSchema().addEnumItemObject(headerValue);
+				if (defaultValue != null && (existingEnum == null || !existingEnum.contains(defaultValue)))
+					parameter.getSchema().addEnumItemObject(defaultValue);
 				parameter.setSchema(parameter.getSchema());
 			}
 			map.put(parameterId, parameter);
@@ -275,9 +307,9 @@ public abstract class AbstractRequestService {
 	 * @param methodAttributes the method attributes
 	 * @param openAPI          the open api
 	 * @return the operation
-	 * @see org.springdoc.core.customizers.DelegatingMethodParameterCustomizer#customizeList(MethodParameter, List)
-	 * @see ParameterCustomizer#customize(Parameter, MethodParameter)
-	 * @see org.springdoc.core.customizers.PropertyCustomizer#customize(Schema, AnnotatedType)
+	 * @see DelegatingMethodParameterCustomizer#customizeList(MethodParameter, List) org.springdoc.core.customizers.DelegatingMethodParameterCustomizer#customizeList(MethodParameter, List)
+	 * @see ParameterCustomizer#customize(Parameter, MethodParameter) ParameterCustomizer#customize(Parameter, MethodParameter)
+	 * @see PropertyCustomizer#customize(Schema, AnnotatedType) org.springdoc.core.customizers.PropertyCustomizer#customize(Schema, AnnotatedType)
 	 */
 	public Operation build(HandlerMethod handlerMethod, RequestMethod requestMethod,
 			Operation operation, MethodAttributes methodAttributes, OpenAPI openAPI) {
@@ -513,9 +545,11 @@ public abstract class AbstractRequestService {
 	 */
 	private boolean isRequestBodyWithMapType(MethodParameter parameter) {
 		// Exclude parameters from the Actuator package
-		if (parameter.getContainingClass().getPackageName().startsWith("org.springframework.boot.actuate")) {
+		String pkg = parameter.getContainingClass().getPackageName();
+		if (ACTUATOR_PKGS.stream().anyMatch(pkg::startsWith)) {
 			return false;
 		}
+
 		// Check for @RequestBody annotation
 		org.springframework.web.bind.annotation.RequestBody requestBody = parameter.getParameterAnnotation(org.springframework.web.bind.annotation.RequestBody.class);
 		if (requestBody == null) {
@@ -534,7 +568,7 @@ public abstract class AbstractRequestService {
 	 */
 	private boolean isRequestPartWithMapType(MethodParameter parameter) {
 		// Check for @RequestPart annotation
-		org.springframework.web.bind.annotation.RequestPart requestPart = parameter.getParameterAnnotation(org.springframework.web.bind.annotation.RequestPart.class);
+		RequestPart requestPart = parameter.getParameterAnnotation(RequestPart.class);
 		if (requestPart == null) {
 			return false;
 		}
@@ -566,7 +600,7 @@ public abstract class AbstractRequestService {
 	 */
 	public boolean isValidParameter(Parameter parameter, MethodAttributes methodAttributes) {
 		return parameter != null && (parameter.getName() != null || parameter.get$ref() != null) &&
-			   !(ArrayUtils.contains(methodAttributes.getMethodConsumes(), APPLICATION_FORM_URLENCODED_VALUE) && ParameterIn.QUERY.toString().equals(parameter.getIn()));
+			   !(List.of(methodAttributes.getMethodConsumes()).contains(APPLICATION_FORM_URLENCODED_VALUE) && ParameterIn.QUERY.toString().equals(parameter.getIn()));
 	}
 
 	/**
@@ -621,6 +655,12 @@ public abstract class AbstractRequestService {
 		if (StringUtils.isBlank(parameter.getIn()))
 			parameter.setIn(parameterInfo.getParamType());
 
+		// A parameter object property defaults to a query parameter. Assign it here (rather
+		// than only when finalizing the parameter map) so that mergeParameter does not collapse
+		// it into a same-named path/header parameter of the same operation (see issue #3270).
+		if (StringUtils.isBlank(parameter.getIn()) && parameterInfo.isParameterObject())
+			parameter.setIn(ParameterIn.QUERY.toString());
+
 		if (parameter.getRequired() == null)
 			parameter.setRequired(parameterInfo.isRequired());
 
@@ -660,6 +700,15 @@ public abstract class AbstractRequestService {
 		}
 		if (annotations != null) {
 			Schema<?> schema = parameter.getSchema();
+			// The resolved schema may be a shared instance cached by swagger-core's
+			// ModelConverterContext (keyed by type). Applying constraints in place would leak
+			// them to every parameter of the same type, even across unrelated controllers (see
+			// issue #3270). Copy an inline schema before mutating it, but only when there is a
+			// constraint to apply, to avoid perturbing schemas that are left untouched.
+			if (schema != null && schema.get$ref() == null && SchemaUtils.hasValidationConstraints(annotations)) {
+				schema = cloneViaJson(schema, schema.getClass(), parameterBuilder.getObjectMapperProvider().jsonMapper());
+				parameter.setSchema(schema);
+			}
 			SchemaUtils.applyValidationsToSchema(schema, annotations, openapiVersion);
 			if (schema instanceof ArraySchema && methodParameter instanceof DelegatingMethodParameter mp) {
 				java.lang.reflect.AnnotatedType annotatedType = null;
@@ -677,9 +726,9 @@ public abstract class AbstractRequestService {
 					java.lang.reflect.AnnotatedType[] typeArgs = paramType.getAnnotatedActualTypeArguments();
 					for (java.lang.reflect.AnnotatedType typeArg : typeArgs) {
 						List<Annotation> genericAnnotations = Arrays.stream(typeArg.getAnnotations()).toList();
-						Schema schemaItemsClone = cloneViaJson(schema.getItems(), Schema.class,  ObjectMapperProvider.createJson(parameterBuilder.getPropertyResolverUtils().getSpringDocConfigProperties()));
+						Schema schemaItemsClone = cloneViaJson(schema.getItems(), Schema.class, ObjectMapperProvider.createJson(parameterBuilder.getPropertyResolverUtils().getSpringDocConfigProperties()));
 						schema.items(schemaItemsClone);
-						SchemaUtils.applyValidationsToSchema(schemaItemsClone, genericAnnotations, openapiVersion);
+						SchemaUtils.applyValidationsToSchema(schema.getItems(), genericAnnotations, openapiVersion);
 					}
 				}
 			}
@@ -706,7 +755,7 @@ public abstract class AbstractRequestService {
 					.filter(annotation -> io.swagger.v3.oas.annotations.parameters.RequestBody.class.equals(annotation.annotationType()))
 					.anyMatch(annotation -> ((io.swagger.v3.oas.annotations.parameters.RequestBody) annotation).required());
 		}
-		boolean validationExists = SchemaUtils.annotatedNotNull(annos.values().stream().toList());
+		boolean validationExists = SchemaUtils.annotatedNotNull(new ArrayList<>(annos.values()));
 
 		if (validationExists || (!isOptional && (springRequestBodyRequired || swaggerRequestBodyRequired)))
 			requestBody.setRequired(true);
@@ -789,7 +838,7 @@ public abstract class AbstractRequestService {
 				(checkRequestBodyAnnotation(methodParameter)
 						|| checkOperationRequestBody(methodParameter)
 						|| checkFile(methodParameter)
-						|| ArrayUtils.contains(methodAttributes.getMethodConsumes(), MULTIPART_FORM_DATA_VALUE));
+						|| List.of(methodAttributes.getMethodConsumes()).contains(MULTIPART_FORM_DATA_VALUE));
 	}
 
 	/**

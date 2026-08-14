@@ -141,7 +141,7 @@ class AbstractOpenApiResourceTest {
 				responseBuilder,
 				operationParser,
 				new SpringDocConfigProperties(),
-				springDocProviders, new SpringDocCustomizers(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty())
+				springDocProviders, new SpringDocCustomizers(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),Optional.empty(), Optional.empty())
 		);
 
 		final Parameter refParameter = new Parameter().$ref(PARAMETER_REFERENCE);
@@ -208,11 +208,15 @@ class AbstractOpenApiResourceTest {
 				requestBuilder,
 				responseBuilder,
 				operationParser,
-				properties, springDocProviders, new SpringDocCustomizers(Optional.of(singleton(openApiCustomizer)), Optional.empty(), Optional.empty(), Optional.empty(),Optional.empty(),Optional.empty())
+				properties, springDocProviders, new SpringDocCustomizers(Optional.of(singleton(openApiCustomizer)), Optional.empty(), Optional.empty(), Optional.empty(),Optional.empty(), Optional.empty())
 		);
 
 		// wait for executor to be done
-		Thread.sleep(1_000);
+		long deadline = System.currentTimeMillis() + 5_000;
+		while (openAPIService.getCachedOpenAPI(Locale.getDefault()) == null
+				&& System.currentTimeMillis() < deadline) {
+			Thread.sleep(50);
+		}
 
 		// emulate generating base url
 		String serverBaseUrl = openAPIService.calculateServerBaseUrl(generatedUrl, new MockClientHttpRequest());
@@ -240,11 +244,15 @@ class AbstractOpenApiResourceTest {
 				responseBuilder,
 				operationParser,
 				properties,
-				springDocProviders, new SpringDocCustomizers(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),Optional.empty(),Optional.empty())
+				springDocProviders, new SpringDocCustomizers(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(),Optional.empty(), Optional.empty())
 		);
 
 		// wait for executor to be done
-		Thread.sleep(1_000);
+		long deadline = System.currentTimeMillis() + 5_000;
+		while (openAPIService.getCachedOpenAPI(Locale.getDefault()) == null
+				&& System.currentTimeMillis() < deadline) {
+			Thread.sleep(50);
+		}
 
 		Locale locale = Locale.US;
 

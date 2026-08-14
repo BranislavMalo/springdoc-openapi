@@ -33,6 +33,9 @@ package org.springdoc.scalar;
  */
 public class ScalarConstants {
 
+	private ScalarConstants() {
+	}
+
 	/**
 	 * The constant SCALAR_DEFAULT_PATH.
 	 */
@@ -57,4 +60,5 @@ public class ScalarConstants {
 	 * The constant HTML_TEMPLATE_PATH.
 	 */
 	public static final String HTML_TEMPLATE_PATH = "/META-INF/resources/webjars/scalar/index.html";
+
 }

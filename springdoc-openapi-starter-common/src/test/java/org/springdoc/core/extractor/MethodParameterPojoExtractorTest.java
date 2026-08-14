@@ -41,6 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MethodParameterPojoExtractorTest {
 
 	private MethodParameterPojoExtractor methodParameterPojoExtractor = new MethodParameterPojoExtractor(new SchemaUtils(Optional.empty()));
+
 	/**
 	 * Tests for {@link MethodParameterPojoExtractor#extractFrom(Class<?>)}.
 	 */

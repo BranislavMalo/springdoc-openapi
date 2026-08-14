@@ -26,6 +26,8 @@
 
 package org.springdoc.webmvc.ui;
 
+import java.util.Optional;
+
 import org.springdoc.core.configuration.SpringDocConfiguration;
 import org.springdoc.core.events.SpringDocAppInitializer;
 import org.springdoc.core.properties.SpringDocConfigProperties;
@@ -39,7 +41,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointProperties;
 import org.springframework.boot.actuate.autoconfigure.web.server.ConditionalOnManagementPort;
 import org.springframework.boot.actuate.autoconfigure.web.server.ManagementPortType;
-import org.springframework.boot.actuate.endpoint.web.servlet.WebMvcEndpointHandlerMapping;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -47,10 +48,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.boot.autoconfigure.web.WebProperties;
-import org.springframework.boot.autoconfigure.web.servlet.WebMvcProperties;
+import org.springframework.boot.webmvc.actuate.endpoint.web.WebMvcEndpointHandlerMapping;
+import org.springframework.boot.webmvc.autoconfigure.WebMvcProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.web.accept.ApiVersionStrategy;
 
 import static org.springdoc.core.utils.Constants.DEFAULT_SWAGGER_UI_ACTUATOR_PATH;
 import static org.springdoc.core.utils.Constants.SPRINGDOC_SWAGGER_UI_ENABLED;
@@ -89,13 +92,14 @@ public class SwaggerConfig {
 	/**
 	 * Spring web provider spring web provider.
 	 *
+	 * @param apiVersionStrategyOptional the api version strategy optional
 	 * @return the spring web provider
 	 */
 	@Bean
 	@ConditionalOnMissingBean
 	@Lazy(false)
-	SpringWebProvider springWebProvider() {
-		return new SpringWebMvcProvider();
+	SpringWebProvider springWebProvider(Optional<ApiVersionStrategy> apiVersionStrategyOptional) {
+		return new SpringWebMvcProvider(apiVersionStrategyOptional);
 	}
 
 	/**
@@ -145,21 +149,24 @@ public class SwaggerConfig {
 	/**
 	 * Swagger web mvc configurer swagger web mvc configurer.
 	 *
-	 * @param swaggerUiConfigProperties the swagger ui calculated config
-	 * @param springWebProperties       the spring web config
-	 * @param springWebMvcProperties    the spring mvc config
-	 * @param swaggerIndexTransformer   the swagger index transformer
-	 * @param swaggerResourceResolver   the swagger resource resolver
-	 * @param swaggerWelcomeCommon   the swagger welcome common
+	 * @param swaggerUiConfigProperties         the swagger ui calculated config
+	 * @param springWebPropertiesProvider       the spring web config provider
+	 * @param springWebMvcPropertiesProvider    the spring mvc config provider
+	 * @param swaggerIndexTransformer           the swagger index transformer
+	 * @param swaggerResourceResolver           the swagger resource resolver
+	 * @param swaggerWelcomeCommon              the swagger welcome common
 	 * @return the swagger web mvc configurer
 	 */
 	@Bean
 	@ConditionalOnMissingBean
 	@Lazy(false)
 	SwaggerWebMvcConfigurer swaggerWebMvcConfigurer(SwaggerUiConfigProperties swaggerUiConfigProperties,
-			WebProperties springWebProperties, WebMvcProperties springWebMvcProperties,
+			ObjectProvider<WebProperties> springWebPropertiesProvider,
+			ObjectProvider<WebMvcProperties> springWebMvcPropertiesProvider,
 			SwaggerIndexTransformer swaggerIndexTransformer, SwaggerResourceResolver swaggerResourceResolver,
 			SwaggerWelcomeCommon swaggerWelcomeCommon) {
+		WebProperties springWebProperties = springWebPropertiesProvider.getIfAvailable(WebProperties::new);
+		WebMvcProperties springWebMvcProperties = springWebMvcPropertiesProvider.getIfAvailable(WebMvcProperties::new);
 		return new SwaggerWebMvcConfigurer(swaggerUiConfigProperties, springWebProperties, springWebMvcProperties, swaggerIndexTransformer, swaggerResourceResolver, swaggerWelcomeCommon);
 	}
 
@@ -189,7 +196,7 @@ public class SwaggerConfig {
 	SpringDocAppInitializer springDocSwaggerInitializer(SwaggerUiConfigProperties swaggerUiConfigProperties) {
 		return new SpringDocAppInitializer(swaggerUiConfigProperties.getPath(), SPRINGDOC_SWAGGER_UI_ENABLED, swaggerUiConfigProperties.isEnabled());
 	}
-
+	
 	/**
 	 * The type Swagger actuator welcome configuration.
 	 */
@@ -212,7 +219,7 @@ public class SwaggerConfig {
 		SwaggerWelcomeActuator swaggerActuatorWelcome(SwaggerUiConfigProperties swaggerUiConfig, SpringDocConfigProperties springDocConfigProperties, WebEndpointProperties webEndpointProperties) {
 			return new SwaggerWelcomeActuator(swaggerUiConfig, springDocConfigProperties, webEndpointProperties);
 		}
-
+		
 		/**
 		 * Spring doc swagger initializer spring doc app initializer.
 		 *

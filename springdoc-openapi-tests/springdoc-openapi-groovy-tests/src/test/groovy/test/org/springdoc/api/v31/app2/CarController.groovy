@@ -35,14 +35,14 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class CarController {
 
-	CarService carService
+	test.org.springdoc.api.v31.app2.CarService carService
 
-	CarController(CarService carService) {
+	CarController(test.org.springdoc.api.v31.app2.CarService carService) {
 		this.carService = carService
 	}
 
 	@GetMapping(path = '/cars')
-	List<Car> getCars(@ParameterObject CarsFilter filter) {
+	List<test.org.springdoc.api.v31.app2.Car> getCars(@ParameterObject CarsFilter filter) {
 		return carService.getCars()
 	}
 
@@ -51,7 +51,7 @@ class CarController {
 	}
 
 	@GetMapping(path = 'cars/{carId}')
-    Car getCar(@PathVariable(value = 'carId') Long carId) {
+	test.org.springdoc.api.v31.app2.Car getCar(@PathVariable(value = 'carId') Long carId) {
 		return carService.getCar(carId)
 	}
 }

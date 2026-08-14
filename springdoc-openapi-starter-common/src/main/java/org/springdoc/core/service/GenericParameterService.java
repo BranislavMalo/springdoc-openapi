@@ -36,13 +36,13 @@ import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonView;
@@ -109,7 +109,7 @@ public class GenericParameterService {
 	/**
 	 * The constant FILE_TYPES.
 	 */
-	private static final List<Class<?>> FILE_TYPES = Collections.synchronizedList(new ArrayList<>(3));
+	private static final List<Class<?>> FILE_TYPES = new CopyOnWriteArrayList<>();
 
 	/**
 	 * The constant LOGGER.
@@ -249,7 +249,7 @@ public class GenericParameterService {
 			paramDoc.setAllowReserved(paramCalcul.getAllowReserved());
 
 		if (StringUtils.isBlank(paramDoc.get$ref()))
-			paramDoc.set$ref(paramDoc.get$ref());
+			paramDoc.set$ref(paramCalcul.get$ref());
 
 		if (paramDoc.getSchema() == null && paramDoc.getContent() == null)
 			paramDoc.setSchema(paramCalcul.getSchema());
@@ -309,7 +309,7 @@ public class GenericParameterService {
 			optionalContent.ifPresent(parameter::setContent);
 		}
 		else
-			setSchema(parameterDoc, components, jsonView, parameter, locale);
+			setSchema(parameterDoc, components, jsonView, parameter);
 
 		setExamples(parameterDoc, parameter);
 		setExtensions(parameterDoc, parameter, locale);
@@ -326,9 +326,8 @@ public class GenericParameterService {
 	 * @param components   the components
 	 * @param jsonView     the json view
 	 * @param parameter    the parameter
-	 * @param locale       the locale
 	 */
-	private void setSchema(io.swagger.v3.oas.annotations.Parameter parameterDoc, Components components, JsonView jsonView, Parameter parameter, Locale locale) {
+	private void setSchema(io.swagger.v3.oas.annotations.Parameter parameterDoc, Components components, JsonView jsonView, Parameter parameter) {
 		if (StringUtils.isNotBlank(parameterDoc.ref()))
 			parameter.$ref(parameterDoc.ref());
 		else {
@@ -344,11 +343,7 @@ public class GenericParameterService {
 					PrimitiveType primitiveType = PrimitiveType.fromTypeAndFormat(schema.getType(), schema.getFormat());
 					if (primitiveType != null) {
 						Schema<?> primitiveSchema = primitiveType.createProperty();
-						if (schema.getDefault() instanceof String stringValue) {
-							primitiveSchema.setDefault(propertyResolverUtils.resolve(stringValue, locale));
-						} else {
-							primitiveSchema.setDefault(schema.getDefault());
-						}
+						primitiveSchema.setDefault(schema.getDefault());
 						if (primitiveSchema.getDefault() != null)
 							schema.setDefault(primitiveSchema.getDefault());
 					}
@@ -390,7 +385,7 @@ public class GenericParameterService {
 			Annotation[] paramAnnotations = getParameterAnnotations(methodParameter);
 			TypeAndTypeAnnotations resolved = resolveTypeAndTypeAnnotationsForParameter(methodParameter);
 			Type type = resolved.type();
-			Annotation[] typeAnnotations = resolved.typeAnnotations();
+			Annotation[] typeAnnotations = resolved.typeAnnotations().toArray(Annotation[]::new);
 			Annotation[] mergedAnnotations =
 					Stream.concat(
 							Arrays.stream(paramAnnotations),
@@ -439,7 +434,7 @@ public class GenericParameterService {
 				&& delegatingMethodParameter.getField() != null) {
 			AnnotatedType annotated = delegatingMethodParameter.getField().getAnnotatedType();
 			Type type = GenericTypeResolver.resolveType(annotated.getType(), methodParameter.getContainingClass());
-			return new TypeAndTypeAnnotations(type, annotationsFromAnnotatedTypeArguments(annotated));
+			return new TypeAndTypeAnnotations(type, Arrays.asList(annotationsFromAnnotatedTypeArguments(annotated)));
 		}
 
 		Type type = GenericTypeResolver.resolveType(methodParameter.getGenericParameterType(), methodParameter.getContainingClass());
@@ -449,17 +444,17 @@ public class GenericParameterService {
 				&& type == String.class) {
 			Class<?> restored = KotlinInlineParameterResolver.resolveInlineType(methodParameter, type);
 			return restored != null
-					? new TypeAndTypeAnnotations(restored, restored.getAnnotations())
-					: new TypeAndTypeAnnotations(type, new Annotation[0]);
+					? new TypeAndTypeAnnotations(restored, Arrays.asList(restored.getAnnotations()))
+					: new TypeAndTypeAnnotations(type, new ArrayList<>());
 		}
 
-		return new TypeAndTypeAnnotations(type, methodParameter.getParameterType().getAnnotations());
+		return new TypeAndTypeAnnotations(type, Arrays.asList(methodParameter.getParameterType().getAnnotations()));
 	}
 
 	/**
 	 * Pair of resolved Java type and type annotations merged with parameter annotations for {@code extractSchema}.
 	 */
-	private record TypeAndTypeAnnotations(Type type, Annotation[] typeAnnotations) {
+	private record TypeAndTypeAnnotations(Type type, List<Annotation> typeAnnotations) {
 	}
 
 	/**
@@ -651,6 +646,15 @@ public class GenericParameterService {
 	}
 
 	/**
+	 * Gets object mapper provider.
+	 *
+	 * @return the object mapper provider
+	 */
+	public ObjectMapperProvider getObjectMapperProvider() {
+		return objectMapperProvider;
+	}
+
+	/**
 	 * Gets optional web conversion service provider.
 	 *
 	 * @return the optional web conversion service provider
@@ -828,9 +832,8 @@ public class GenericParameterService {
 		Class cls = ((DelegatingMethodParameter) methodParameter).getExecutable().getDeclaringClass();
 		if (cls.getSuperclass() != null && cls.isRecord()) {
 			Map<String, String> recordParamMap = javadocProvider.getRecordClassParamJavadoc(cls);
-			String recordDesc = recordParamMap.get(fieldName);
-			if (recordDesc != null) {
-				paramJavadocDescription = recordDesc;
+			if (recordParamMap.containsKey(fieldName)) {
+				paramJavadocDescription = recordParamMap.get(fieldName);
 			}
 		}
 
