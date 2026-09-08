@@ -41,6 +41,7 @@ import io.swagger.v3.core.util.PrimitiveType;
 import io.swagger.v3.oas.models.media.ComposedSchema;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.parameters.Parameter;
 import jakarta.validation.constraints.NotNull;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -181,58 +182,31 @@ public class SpringDocUtils {
 			if (schema.getProperties() != null) {
 				schema.getProperties().forEach((key, value) -> handleSchemaTypes(value));
 			}
-			fixNullOnlyAdditionalProperties(schema);
 		}
 	}
 
 	/**
-	 * Fix additionalProperties incorrectly set to {"type": "null"} when @Nullable
-	 * propagates from a Map field to its Object value type (resolved as "any type" = {}).
-	 * <p>
-	 * Tracked under <a href="https://github.com/swagger-api/swagger-core/issues/5115">swagger-core#5115</a>.
+	 * Removes nullability from a path parameter's schema. A path parameter is always
+	 * required and can never be {@code null}, so a nullable schema (e.g. propagated from a
+	 * JSpecify {@code @Nullable} annotation on a backing {@code @ParameterObject} field that
+	 * is reused as both a path and an optional query parameter) is invalid here.
 	 *
-	 * @param schema the schema to fix
+	 * @param parameter the path parameter
 	 */
-	public static void fixNullOnlyAdditionalProperties(Schema<?> schema) {
-		if (schema == null) {
+	public static void fixNullablePathParameter(Parameter parameter) {
+		Schema<?> schema = parameter.getSchema();
+		if (schema == null)
 			return;
+		Set<String> types = schema.getTypes();
+		if (types != null) {
+			types.remove("null");
+			if (types.isEmpty())
+				schema.setTypes(null);
 		}
-		Object additionalProperties = schema.getAdditionalProperties();
-		if (additionalProperties instanceof Schema<?> addPropSchema) {
-			boolean isNullOnlyType = false;
-			Set<String> types = addPropSchema.getTypes();
-			boolean onlyNullTypeOAS31 = types != null && types.size() == 1 && types.contains("null");
-			boolean onlyNullTypeOAS30 = types == null && "null".equals(addPropSchema.getType());
-			if (onlyNullTypeOAS31 || onlyNullTypeOAS30) {
-				isNullOnlyType = true;
-			}
-			if (isNullOnlyType && addPropSchema.get$ref() == null
-					&& addPropSchema.getProperties() == null && addPropSchema.getFormat() == null) {
-				addPropSchema.setTypes(null);
-				addPropSchema.setType(null);
-			}
-		}
-		if (schema.getProperties() != null) {
-			schema.getProperties().values().forEach(SpringDocUtils::fixNullOnlyAdditionalProperties);
-		}
-	}
-
-	/**
-	 * Removes {@code null}-keyed entries from a schema's properties map (and its nested
-	 * schemas). When swagger-core resolves a {@code @JsonUnwrapped} member (for example
-	 * Spring HATEOAS {@code EntityModel.getContent()} with HAL disabled), the unwrapped
-	 * property schemas may have a {@code null} name and get inserted into the properties map
-	 * under a {@code null} key. Such a key cannot be serialized by Jackson, which fails the
-	 * whole OpenAPI document with {@code "Null key for a Map not allowed in JSON"}.
-	 *
-	 * @param schema the schema to fix
-	 */
-	public static void removeNullKeyProperties(Schema<?> schema) {
-		if (schema == null || schema.getProperties() == null) {
-			return;
-		}
-		schema.getProperties().keySet().removeIf(Objects::isNull);
-		schema.getProperties().values().forEach(SpringDocUtils::removeNullKeyProperties);
+		if ("null".equals(schema.getType()))
+			schema.setType(null);
+		if (Boolean.TRUE.equals(schema.getNullable()))
+			schema.setNullable(null);
 	}
 
 	/**
@@ -591,13 +565,10 @@ public class SpringDocUtils {
 	 * @return the spring doc utils
 	 */
 	public SpringDocUtils initExtraSchemas() {
-		customClasses().put("java.time.Duration", PrimitiveType.STRING);
-		customClasses().put("java.time.LocalTime", PrimitiveType.STRING);
 		customClasses().put("java.time.YearMonth", PrimitiveType.STRING);
 		customClasses().put("java.time.MonthDay", PrimitiveType.STRING);
 		customClasses().put("java.time.Year", PrimitiveType.STRING);
 		customClasses().put("java.time.Period", PrimitiveType.STRING);
-		customClasses().put("java.time.OffsetTime", PrimitiveType.STRING);
 		customClasses().put("java.time.ZoneId", PrimitiveType.STRING);
 		customClasses().put("java.time.ZoneOffset", PrimitiveType.STRING);
 		customClasses().put("java.util.TimeZone", PrimitiveType.STRING);
@@ -612,13 +583,10 @@ public class SpringDocUtils {
 	 * @return the spring doc utils
 	 */
 	public SpringDocUtils resetExtraSchemas() {
-		customClasses().remove("java.time.Duration");
-		customClasses().remove("java.time.LocalTime");
 		customClasses().remove("java.time.YearMonth");
 		customClasses().remove("java.time.MonthDay");
 		customClasses().remove("java.time.Year");
 		customClasses().remove("java.time.Period");
-		customClasses().remove("java.time.OffsetTime");
 		customClasses().remove("java.time.ZoneId");
 		customClasses().remove("java.time.ZoneOffset");
 		customClasses().remove("java.util.TimeZone");

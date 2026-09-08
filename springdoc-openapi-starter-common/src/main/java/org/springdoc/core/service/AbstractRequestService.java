@@ -88,6 +88,7 @@ import org.springdoc.core.utils.SpringDocAnnotationsUtils;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
@@ -143,6 +144,7 @@ public abstract class AbstractRequestService {
 		PARAM_TYPES_TO_IGNORE.add(NativeWebRequest.class);
 		PARAM_TYPES_TO_IGNORE.add(Principal.class);
 		PARAM_TYPES_TO_IGNORE.add(HttpMethod.class);
+		PARAM_TYPES_TO_IGNORE.add(HttpHeaders.class);
 		PARAM_TYPES_TO_IGNORE.add(Locale.class);
 		PARAM_TYPES_TO_IGNORE.add(TimeZone.class);
 		PARAM_TYPES_TO_IGNORE.add(InputStream.class);
@@ -710,17 +712,16 @@ public abstract class AbstractRequestService {
 				parameter.setSchema(schema);
 			}
 			SchemaUtils.applyValidationsToSchema(schema, annotations, openapiVersion);
-			if (schema instanceof ArraySchema && methodParameter instanceof DelegatingMethodParameter mp) {
+			if (schema instanceof ArraySchema && methodParameter instanceof DelegatingMethodParameter delegatingMethodParameter) {
 				java.lang.reflect.AnnotatedType annotatedType = null;
 				if (isParameterObject) {
-					Field field = mp.getField();
+					Field field = delegatingMethodParameter.getField();
 					if (field != null) {
 						annotatedType = field.getAnnotatedType();
 					}
 				}
 				else {
-					java.lang.reflect.Parameter param = mp.getParameter();
-					annotatedType = param.getAnnotatedType();
+					annotatedType = delegatingMethodParameter.getParameter().getAnnotatedType();
 				}
 				if (annotatedType instanceof AnnotatedParameterizedType paramType) {
 					java.lang.reflect.AnnotatedType[] typeArgs = paramType.getAnnotatedActualTypeArguments();

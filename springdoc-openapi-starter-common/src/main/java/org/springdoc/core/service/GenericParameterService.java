@@ -434,7 +434,7 @@ public class GenericParameterService {
 				&& delegatingMethodParameter.getField() != null) {
 			AnnotatedType annotated = delegatingMethodParameter.getField().getAnnotatedType();
 			Type type = GenericTypeResolver.resolveType(annotated.getType(), methodParameter.getContainingClass());
-			return new TypeAndTypeAnnotations(type, Arrays.asList(annotationsFromAnnotatedTypeArguments(annotated)));
+			return new TypeAndTypeAnnotations(type, Arrays.asList(annotationsFromAnnotatedType(annotated)));
 		}
 
 		Type type = GenericTypeResolver.resolveType(methodParameter.getGenericParameterType(), methodParameter.getContainingClass());
@@ -448,13 +448,46 @@ public class GenericParameterService {
 					: new TypeAndTypeAnnotations(type, new ArrayList<>());
 		}
 
-		return new TypeAndTypeAnnotations(type, Arrays.asList(methodParameter.getParameterType().getAnnotations()));
+		List<Annotation> typeAnnotations = Stream.concat(
+				Arrays.stream(annotationsFromAnnotatedTypeArguments(getParameterAnnotatedType(methodParameter))),
+				Arrays.stream(methodParameter.getParameterType().getAnnotations())).toList();
+		return new TypeAndTypeAnnotations(type, typeAnnotations);
+	}
+
+	/**
+	 * Resolves the {@link AnnotatedType} of a method parameter so that annotations declared on its
+	 * generic type arguments (for example inside a {@link List} or an {@link Optional}) can be inspected.
+	 *
+	 * @param methodParameter the method parameter
+	 * @return the annotated type, or {@code null} if it cannot be resolved
+	 */
+	private static AnnotatedType getParameterAnnotatedType(MethodParameter methodParameter) {
+		int index = methodParameter.getParameterIndex();
+		if (index < 0)
+			return null;
+		java.lang.reflect.Parameter[] parameters = methodParameter.getExecutable().getParameters();
+		if (index >= parameters.length)
+			return null;
+		return parameters[index].getAnnotatedType();
 	}
 
 	/**
 	 * Pair of resolved Java type and type annotations merged with parameter annotations for {@code extractSchema}.
 	 */
 	private record TypeAndTypeAnnotations(Type type, List<Annotation> typeAnnotations) {
+	}
+
+	/**
+	 * Collects annotations declared on the type itself and on each type argument of an
+	 * {@link AnnotatedParameterizedType}.
+	 *
+	 * @param annotatedType the annotated type
+	 * @return a new array, possibly empty
+	 */
+	private static Annotation[] annotationsFromAnnotatedType(AnnotatedType annotatedType) {
+		return Stream.concat(
+				Arrays.stream(annotatedType.getAnnotations()),
+				Arrays.stream(annotationsFromAnnotatedTypeArguments(annotatedType))).toArray(Annotation[]::new);
 	}
 
 	/**

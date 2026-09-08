@@ -38,13 +38,16 @@ import org.springframework.context.annotation.Lazy;
 
 /**
  * The type Spring doc ai properties.
+ * <p>
+ * Bound only when {@code springdoc.ai.mcp.enabled=true} is set explicitly, so the declared
+ * field defaults match the auto-configuration gates.
  *
  * @author bnasslahsen
  */
 @Lazy(false)
 @AutoConfiguration(after = SpringDocConfiguration.class)
 @ConfigurationProperties(prefix = "springdoc.ai.mcp")
-@ConditionalOnProperty(name = "springdoc.ai.mcp.enabled", matchIfMissing = true)
+@ConditionalOnProperty(name = "springdoc.ai.mcp.enabled", matchIfMissing = false)
 @ConditionalOnBean(SpringDocConfiguration.class)
 public class SpringDocAiProperties {
 
@@ -54,7 +57,8 @@ public class SpringDocAiProperties {
 	public static final String SPRINGDOC_MCP_ENABLED = "springdoc.ai.mcp.enabled";
 
 	/**
-	 * Enable the MCP Tool Server.
+	 * Enable the MCP Tool Server. Opt-in: the whole MCP surface stays unregistered unless
+	 * this is explicitly set to {@code true}.
 	 */
 	private boolean enabled;
 
@@ -206,6 +210,27 @@ public class SpringDocAiProperties {
 	}
 
 	/**
+	 * Audit configuration for MCP tool executions.
+	 */
+	private Audit audit = new Audit();
+
+	/**
+	 * Gets audit.
+	 * @return the audit
+	 */
+	public Audit getAudit() {
+		return audit;
+	}
+
+	/**
+	 * Sets audit.
+	 * @param audit the audit
+	 */
+	public void setAudit(Audit audit) {
+		this.audit = audit;
+	}
+
+	/**
 	 * Guardrails configuration for MCP tool safety.
 	 */
 	private Guardrails guardrails = new Guardrails();
@@ -227,8 +252,49 @@ public class SpringDocAiProperties {
 	}
 
 	/**
+	 * Audit configuration class for MCP tool execution audit events.
+	 *
+	 * @author bnasslahsen
+	 */
+	public static class Audit {
+
+		/**
+		 * When true, values carried by secret-shaped keys (authorization, password, token,
+		 * api-key, cookie, …) are masked in the audit event before it is logged or stored
+		 * for the dashboard.
+		 */
+		private boolean redact = true;
+
+		/**
+		 * Gets redact.
+		 * @return the redact
+		 */
+		public boolean isRedact() {
+			return redact;
+		}
+
+		/**
+		 * Sets redact.
+		 * @param redact the redact
+		 */
+		public void setRedact(boolean redact) {
+			this.redact = redact;
+		}
+
+	}
+
+	/**
 	 * Guardrails configuration class for MCP tool safety classification and
 	 * human-in-the-loop (HITL) support.
+	 *
+	 * <p><strong>The HITL guardrail is a confirmation step, not an access-control
+	 * boundary.</strong> It exists so that a human operator gets a chance to review a mutating
+	 * tool call before it is executed - it does not authenticate or authorize the caller, and
+	 * it is not designed to withstand a caller that deliberately confirms its own call. Like
+	 * {@code /swagger-ui}, the {@code /mcp}, {@code /mcp-ui} and {@code /api/mcp-admin/**}
+	 * endpoints are integration surfaces: the integrating application must secure them, for
+	 * example with Spring Security. Since 3.1.1 the whole MCP surface is opt-in
+	 * ({@code springdoc.ai.mcp.enabled=true}) so it is never exposed by accident.
 	 *
 	 * @author bnasslahsen
 	 */
@@ -236,7 +302,9 @@ public class SpringDocAiProperties {
 
 		/**
 		 * When true, mutating tools (non-safe HTTP methods) return a "requires approval"
-		 * response instead of executing the HTTP call.
+		 * response instead of executing the HTTP call. This is a human confirmation step,
+		 * not an authorization control: do not rely on it to keep an untrusted caller from
+		 * invoking a mutating tool, secure the MCP endpoints instead.
 		 */
 		private boolean requireApprovalForMutatingTools = true;
 

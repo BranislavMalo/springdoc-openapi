@@ -403,8 +403,6 @@ public abstract class AbstractOpenApiResource extends SpecFilter {
 				}
 				getPaths(mappingsMap, finalLocale, openAPI);
 
-				removeNullKeyComponentProperties(openAPI);
-
 				if (springDocConfigProperties.isTrimKotlinIndent())
 					this.trimIndent(openAPI);
 
@@ -428,8 +426,8 @@ public abstract class AbstractOpenApiResource extends SpecFilter {
 				List<Server> servers = openAPI.getServers();
 				List<Server> serversCopy = cloneViaJson(servers,  new TypeReference<List<Server>>() {},  springDocProviders.jsonMapper());
 
-				openAPIService.getContext().getBeansOfType(OpenApiLocaleCustomizer.class).values().forEach(openApiLocaleCustomizer -> openApiLocaleCustomizer.customise(openAPI, finalLocale));
-				springDocCustomizers.getOpenApiCustomizers().ifPresent(apiCustomizers -> apiCustomizers.forEach(openApiCustomizer -> openApiCustomizer.customise(openAPI)));
+				openAPIService.getContext().getBeanProvider(OpenApiLocaleCustomizer.class).orderedStream().forEach(openApiLocaleCustomizer -> openApiLocaleCustomizer.customise(openAPI, finalLocale));
+				springDocCustomizers.getOpenApiCustomizersStream().forEach(openApiCustomizer -> openApiCustomizer.customise(openAPI));
 				if (!CollectionUtils.isEmpty(openAPI.getServers()) && !openAPI.getServers().equals(serversCopy))
 					openAPIService.setServersPresent(true);
 
@@ -463,23 +461,6 @@ public abstract class AbstractOpenApiResource extends SpecFilter {
 		}
 
 		return inputLocale == null ? Locale.getDefault() : inputLocale;
-	}
-
-	/**
-	 * Removes {@code null}-keyed entries from the component schema properties. Swagger-core
-	 * inserts a {@code null} property key when resolving a {@code @JsonUnwrapped} member whose
-	 * content is a {@code $ref} (for example Spring HATEOAS {@code EntityModel.getContent()}
-	 * with HAL disabled), which otherwise breaks JSON serialization of the document.
-	 *
-	 * @param openAPI the open api
-	 */
-	private static void removeNullKeyComponentProperties(OpenAPI openAPI) {
-		if (openAPI.getComponents() == null || openAPI.getComponents().getSchemas() == null) {
-			return;
-		}
-		for (Schema<?> schema : openAPI.getComponents().getSchemas().values()) {
-			SpringDocUtils.removeNullKeyProperties(schema);
-		}
 	}
 
 	/**
@@ -863,13 +844,8 @@ public abstract class AbstractOpenApiResource extends SpecFilter {
 	 * @return the router operation
 	 */
 	private RouterOperation customizeDataRestRouterOperation(RouterOperation routerOperation) {
-		Optional<Set<DataRestRouterOperationCustomizer>> optionalDataRestRouterOperationCustomizers = springDocCustomizers.getDataRestRouterOperationCustomizers();
-		if (optionalDataRestRouterOperationCustomizers.isPresent()) {
-			Set<DataRestRouterOperationCustomizer> dataRestRouterOperationCustomizerList = optionalDataRestRouterOperationCustomizers.get();
-			for (DataRestRouterOperationCustomizer dataRestRouterOperationCustomizer : dataRestRouterOperationCustomizerList) {
-				routerOperation = dataRestRouterOperationCustomizer.customize(routerOperation);
-			}
-		}
+		for (DataRestRouterOperationCustomizer dataRestRouterOperationCustomizer : springDocCustomizers.getDataRestRouterOperationCustomizersStream().toList())
+			routerOperation = dataRestRouterOperationCustomizer.customize(routerOperation);
 		return routerOperation;
 	}
 
@@ -1115,15 +1091,11 @@ public abstract class AbstractOpenApiResource extends SpecFilter {
 	 * @return the operation
 	 */
 	protected Operation customizeOperation(Operation operation, Components components, HandlerMethod handlerMethod) {
-		Optional<Set<OperationCustomizer>> optionalOperationCustomizers = springDocCustomizers.getOperationCustomizers();
-		if (optionalOperationCustomizers.isPresent()) {
-			Set<OperationCustomizer> operationCustomizerList = optionalOperationCustomizers.get();
-			for (OperationCustomizer operationCustomizer : operationCustomizerList) {
-				if (operationCustomizer instanceof GlobalOperationComponentsCustomizer globalOperationComponentsCustomizer)
-					operation = globalOperationComponentsCustomizer.customize(operation, components, handlerMethod);
-				else
-					operation = operationCustomizer.customize(operation, handlerMethod);
-			}
+		for (OperationCustomizer operationCustomizer : springDocCustomizers.getOperationCustomizersStream().toList()) {
+			if (operationCustomizer instanceof GlobalOperationComponentsCustomizer globalOperationComponentsCustomizer)
+				operation = globalOperationComponentsCustomizer.customize(operation, components, handlerMethod);
+			else
+				operation = operationCustomizer.customize(operation, handlerMethod);
 		}
 		return operation;
 	}
@@ -1136,13 +1108,8 @@ public abstract class AbstractOpenApiResource extends SpecFilter {
 	 * @return the router operation
 	 */
 	protected RouterOperation customizeRouterOperation(RouterOperation routerOperation, HandlerMethod handlerMethod) {
-		Optional<Set<RouterOperationCustomizer>> optionalRouterOperationCustomizers = springDocCustomizers.getRouterOperationCustomizers();
-		if (optionalRouterOperationCustomizers.isPresent()) {
-			Set<RouterOperationCustomizer> routerOperationCustomizerList = optionalRouterOperationCustomizers.get();
-			for (RouterOperationCustomizer routerOperationCustomizer : routerOperationCustomizerList) {
-				routerOperation = routerOperationCustomizer.customize(routerOperation, handlerMethod);
-			}
-		}
+		for (RouterOperationCustomizer routerOperationCustomizer : springDocCustomizers.getRouterOperationCustomizersStream().toList())
+			routerOperation = routerOperationCustomizer.customize(routerOperation, handlerMethod);
 		return routerOperation;
 	}
 
@@ -1412,6 +1379,8 @@ public abstract class AbstractOpenApiResource extends SpecFilter {
 					String name = parameter.getName();
 					if (!Strings.CS.containsAny(operationPath, "{" + name + "}", "{*" + name + "}"))
 						paramIt.remove();
+					else
+						SpringDocUtils.fixNullablePathParameter(parameter);
 				}
 			}
 		}

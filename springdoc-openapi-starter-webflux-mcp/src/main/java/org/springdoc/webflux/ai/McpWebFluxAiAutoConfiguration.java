@@ -30,11 +30,15 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
+import io.micrometer.context.ContextRegistry;
+import org.slf4j.MDC;
 import org.springdoc.ai.configuration.SpringDocAiAutoConfiguration;
 import org.springdoc.ai.customizers.McpToolDescriptionCustomizer;
 import org.springdoc.ai.properties.SpringDocAiProperties;
 import org.springdoc.core.events.SpringDocAppInitializer;
+import reactor.core.publisher.Hooks;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -62,13 +66,12 @@ import static org.springdoc.ai.properties.SpringDocAiProperties.SPRINGDOC_MCP_UI
  */
 @Lazy(false)
 @AutoConfiguration(after = SpringDocAiAutoConfiguration.class)
-@ConditionalOnProperty(name = "springdoc.ai.mcp.enabled", matchIfMissing = true)
+@ConditionalOnProperty(name = "springdoc.ai.mcp.enabled", matchIfMissing = false)
 @ConditionalOnWebApplication(type = Type.REACTIVE)
 public class McpWebFluxAiAutoConfiguration {
 
 	/**
-	 * Creates the {@link McpAuditMdcWebFilter} that populates MDC and
-	 * {@link org.springdoc.ai.mcp.McpRequestContextHolder} for MCP requests.
+	 * Creates the {@link McpAuditMdcWebFilter} that captures the MCP request context.
 	 * @param aiProperties the AI properties (used to scope the filter to the MCP path)
 	 * @return the WebFilter bean
 	 */
@@ -76,6 +79,38 @@ public class McpWebFluxAiAutoConfiguration {
 	@ConditionalOnMissingBean(McpAuditMdcWebFilter.class)
 	McpAuditMdcWebFilter mcpAuditMdcWebFilter(SpringDocAiProperties aiProperties) {
 		return new McpAuditMdcWebFilter(aiProperties.getMcpEndpoint());
+	}
+
+	/**
+	 * Wires the request context captured by {@link McpAuditMdcWebFilter} into the thread
+	 * locals read by the synchronous audit logger and tool callback.
+	 * <p>
+	 * The filter writes the values into the Reactor context, which is per-subscription and
+	 * therefore per-request. Registering the accessors below and enabling Reactor's
+	 * automatic context propagation makes them visible as thread locals for the duration of
+	 * each operator only, so the headers of one MCP request can no longer be observed while
+	 * serving another on the same event-loop thread.
+	 * @return an initializing bean that registers the accessors
+	 */
+	@Bean
+	InitializingBean springDocMcpReactiveContextPropagation() {
+		return () -> {
+			ContextRegistry registry = ContextRegistry.getInstance();
+			registry.registerThreadLocalAccessor(new McpRequestContextAccessor());
+			registerMdcAccessor(registry, McpAuditMdcWebFilter.MDC_CLIENT_IP);
+			registerMdcAccessor(registry, McpAuditMdcWebFilter.MDC_SESSION_ID);
+			Hooks.enableAutomaticContextPropagation();
+		};
+	}
+
+	/**
+	 * Registers a thread-local accessor mirroring a single Reactor context entry into MDC.
+	 * @param registry the Micrometer context registry
+	 * @param key the shared context and MDC key
+	 */
+	private static void registerMdcAccessor(ContextRegistry registry, String key) {
+		registry.registerThreadLocalAccessor(key, () -> MDC.get(key), value -> MDC.put(key, value),
+				() -> MDC.remove(key));
 	}
 
 	/**
@@ -100,7 +135,7 @@ public class McpWebFluxAiAutoConfiguration {
 	 * @return the WebFlux configurer
 	 */
 	@Bean
-	@ConditionalOnProperty(name = SPRINGDOC_MCP_UI_ENABLED, matchIfMissing = true)
+	@ConditionalOnProperty(name = SPRINGDOC_MCP_UI_ENABLED, matchIfMissing = false)
 	McpDashboardWebFluxConfigurer mcpDashboardWebFluxConfigurer(SpringDocAiProperties aiProperties) {
 		return new McpDashboardWebFluxConfigurer(aiProperties);
 	}
@@ -112,7 +147,7 @@ public class McpWebFluxAiAutoConfiguration {
 	 * @return the router function
 	 */
 	@Bean
-	@ConditionalOnProperty(name = SPRINGDOC_MCP_UI_ENABLED, matchIfMissing = true)
+	@ConditionalOnProperty(name = SPRINGDOC_MCP_UI_ENABLED, matchIfMissing = false)
 	RouterFunction<ServerResponse> mcpDashboardRedirectRouter(SpringDocAiProperties aiProperties) {
 		String dashboardPath = aiProperties.getDashboardPath();
 		return RouterFunctions.route()
@@ -137,7 +172,7 @@ public class McpWebFluxAiAutoConfiguration {
 	 */
 	@Bean
 	@Lazy(false)
-	@ConditionalOnProperty(name = SPRINGDOC_MCP_UI_ENABLED, matchIfMissing = true)
+	@ConditionalOnProperty(name = SPRINGDOC_MCP_UI_ENABLED, matchIfMissing = false)
 	SmartInitializingSingleton mcpDashboardApiVersionCustomizer(Optional<ApiVersionStrategy> apiVersionStrategyOptional,
 			SpringDocAiProperties aiProperties, List<RequestMappingHandlerMapping> handlerMappings) {
 		return () -> apiVersionStrategyOptional.ifPresent(strategy -> {
@@ -158,7 +193,7 @@ public class McpWebFluxAiAutoConfiguration {
 	 */
 	@Bean
 	@ConditionalOnMissingBean(name = "springDocMcpDashboardInitializer")
-	@ConditionalOnProperty(name = SPRINGDOC_MCP_UI_ENABLED, matchIfMissing = true)
+	@ConditionalOnProperty(name = SPRINGDOC_MCP_UI_ENABLED, matchIfMissing = false)
 	@Lazy(false)
 	SpringDocAppInitializer springDocMcpDashboardInitializer(SpringDocAiProperties aiProperties) {
 		return new SpringDocAppInitializer(aiProperties.getDashboardPath(), SPRINGDOC_MCP_UI_ENABLED,

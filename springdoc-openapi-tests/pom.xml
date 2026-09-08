@@ -2,7 +2,7 @@
 	<parent>
 		<artifactId>springdoc-openapi</artifactId>
 		<groupId>org.springdoc</groupId>
-		<version>3.1.1-SNAPSHOT</version>
+		<version>3.1.2-SNAPSHOT</version>
 	</parent>
 	<packaging>pom</packaging>
 	<modelVersion>4.0.0</modelVersion>
@@ -24,6 +24,7 @@
 		<module>springdoc-openapi-actuator-webmvc-tests</module>
 		<module>springdoc-openapi-kotlin-webflux-tests</module>
 		<module>springdoc-openapi-kotlin-webmvc-tests</module>
+		<module>springdoc-openapi-kotlin-data-rest-tests</module>
 		<module>springdoc-openapi-hateoas-tests</module>
 		<module>springdoc-openapi-data-rest-tests</module>
 	</modules>

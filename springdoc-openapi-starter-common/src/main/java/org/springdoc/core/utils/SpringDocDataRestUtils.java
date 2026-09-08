@@ -26,8 +26,9 @@
 
 package org.springdoc.core.utils;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import java.util.Set;
 import io.swagger.v3.core.converter.AnnotatedType;
 import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.core.converter.ResolvedSchema;
+import io.swagger.v3.core.util.AnnotationsUtils;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
@@ -100,6 +102,11 @@ public class SpringDocDataRestUtils {
 	private final HashMap<String, EntityInfo> entityInoMap = new HashMap();
 
 	/**
+	 * The associations fields by entity.
+	 */
+	private final HashMap<String, List<String>> allAssociationsFieldsMap = new HashMap<>();
+
+	/**
 	 * The Repository rest configuration.
 	 */
 	private final RepositoryRestConfiguration repositoryRestConfiguration;
@@ -131,15 +138,16 @@ public class SpringDocDataRestUtils {
 			final PersistentEntity<?, ?> entity = persistentEntities.getRequiredPersistentEntity(domainType);
 			EntityInfo entityInfo = new EntityInfo();
 			entityInfo.setDomainType(domainType);
-			Set<String> ignoredFields = getIgnoredFields(resourceMetadata, entity);
+			List<String> ignoredFields = getIgnoredFields(resourceMetadata, entity);
 			if (!repositoryRestConfiguration.isIdExposedFor(entity.getType()))
 				entityInfo.setIgnoredFields(ignoredFields);
-			Set<String> associationsFields = getAssociationsFields(resourceMetadata, entity);
+			List<String> associationsFields = getAssociationsFields(resourceMetadata, entity);
 			entityInfo.setAssociationsFields(associationsFields);
+			allAssociationsFieldsMap.put(domainType.getSimpleName(), getAllAssociationsFields(resourceMetadata, entity));
 			entityInoMap.put(domainType.getSimpleName(), entityInfo);
 		}
 
-		openAPI.getPaths().entrySet()
+		openAPI.getPaths().entrySet().stream()
 				.forEach(stringPathItemEntry -> {
 					PathItem pathItem = stringPathItemEntry.getValue();
 					pathItem.readOperations().forEach(operation -> {
@@ -245,8 +253,7 @@ public class SpringDocDataRestUtils {
 			while (it.hasNext()) {
 				Entry<String, Schema> entry = it.next();
 				String propId = entry.getKey();
-				EntityInfo entityInfoForKey = entityInoMap.get(key);
-				if (entityInfoForKey != null && entityInfoForKey.getAssociationsFields().contains(propId)) {
+				if (entityInoMap.containsKey(key) && entityInoMap.get(key).getAssociationsFields().contains(propId)) {
 					if (entry.getValue().getItems() != null)
 						referencedSchema.addProperty(propId, new ArraySchema().items(new StringSchema()));
 					else
@@ -266,6 +273,8 @@ public class SpringDocDataRestUtils {
 	 * @return the schema
 	 */
 	private Schema updateResponseSchema(String className, Schema existingSchema, Components components, boolean openapi31) {
+		if (existingSchema == null)
+			return null;
 		Map<String, Schema> properties = existingSchema.getProperties();
 		EntityInfo entityInfo = entityInoMap.get(className);
 		if (!CollectionUtils.isEmpty(properties)) {
@@ -278,9 +287,45 @@ public class SpringDocDataRestUtils {
 				else if (EMBEDDED.equals(propId)) {
 					updateResponseSchemaEmbedded(components, entityInfo, entry, openapi31);
 				}
+				else if (allAssociationsFieldsMap.getOrDefault(className, Collections.emptyList()).contains(propId)) {
+					// the property schema may be shared with the request body representation,
+					// so rewrite a copy of it instead of the resolved instance
+					Schema propertyCopy = AnnotationsUtils.clone(entry.getValue(), openapi31);
+					updateResponseSchemaProperty(propertyCopy, components, openapi31);
+					entry.setValue(propertyCopy);
+				}
 			}
 		}
 		return existingSchema;
+	}
+
+	/**
+	 * Update a response schema property that points to an entity which is not an
+	 * exported repository. Spring Data REST serializes these associations in
+	 * the containing representation, so they need the same association filtering
+	 * as an exported entity response.
+	 *
+	 * @param property   the property
+	 * @param components the components
+	 * @param openapi31  the openapi 31
+	 */
+	private void updateResponseSchemaProperty(Schema property, Components components, boolean openapi31) {
+		if (property == null)
+			return;
+		if (property.get$ref() != null && !property.get$ref().endsWith(RESPONSE)) {
+			String key = property.get$ref().substring(Components.COMPONENTS_SCHEMAS_REF.length());
+			if (entityInoMap.containsKey(key)) {
+				String newKey = property.get$ref() + RESPONSE;
+				if (!components.getSchemas().containsKey(key + RESPONSE)) {
+					createNewResponseSchema(key, components, openapi31);
+					updateResponseSchema(key, components.getSchemas().get(key + RESPONSE), components, openapi31);
+				}
+				property.set$ref(newKey);
+			}
+		}
+		else if (property.getItems() != null) {
+			updateResponseSchemaProperty(property.getItems(), components, openapi31);
+		}
 	}
 
 	/**
@@ -293,15 +338,16 @@ public class SpringDocDataRestUtils {
 	 */
 	private void updateResponseSchemaEmbedded(Components components, EntityInfo entityInfo, Entry<String, Schema> entry, boolean openapi31) {
 		String entityClassName = linkRelationProvider.getCollectionResourceRelFor(entityInfo.getDomainType()).value();
+		Map<String, Schema> embeddedProperties = entry.getValue().getProperties();
+		if (CollectionUtils.isEmpty(embeddedProperties))
+			return;
 		Schema itemsSchema = null;
 		if (openapi31) {
-			JsonSchema jsonSchema = (JsonSchema) entry.getValue().getProperties().get(entityClassName);
-			if (jsonSchema != null)
+			if (embeddedProperties.get(entityClassName) instanceof JsonSchema jsonSchema)
 				itemsSchema = jsonSchema.getItems();
 		}
 		else {
-			ArraySchema arraySchema = (ArraySchema) entry.getValue().getProperties().get(entityClassName);
-			if (arraySchema != null)
+			if (embeddedProperties.get(entityClassName) instanceof ArraySchema arraySchema)
 				itemsSchema = arraySchema.getItems();
 		}
 		if (itemsSchema != null) {
@@ -361,8 +407,7 @@ public class SpringDocDataRestUtils {
 			while (it.hasNext()) {
 				Entry<String, Schema> entry = it.next();
 				String propId = entry.getKey();
-				EntityInfo entityInfoForKey = entityInoMap.get(key);
-				if (entityInfoForKey != null && entityInfoForKey.getIgnoredFields().contains(propId)) {
+				if (entityInoMap.containsKey(key) && entityInoMap.get(key).getIgnoredFields().contains(propId)) {
 					it.remove();
 				}
 			}
@@ -435,9 +480,9 @@ public class SpringDocDataRestUtils {
 	 * @param entity           the entity
 	 * @return the associations fields
 	 */
-	private Set<String> getAssociationsFields(ResourceMetadata
+	private List<String> getAssociationsFields(ResourceMetadata
 			resourceMetadata, PersistentEntity<?, ?> entity) {
-		Set<String> associationsFields = new HashSet<>();
+		List<String> associationsFields = new ArrayList<>();
 		entity.doWithAssociations((SimpleAssociationHandler) association -> {
 			PersistentProperty<?> property = association.getInverse();
 			ResourceMapping mapping = resourceMetadata.getMappingFor(property);
@@ -450,15 +495,34 @@ public class SpringDocDataRestUtils {
 	}
 
 	/**
+	 * Gets all associations fields.
+	 *
+	 * @param resourceMetadata the resource metadata
+	 * @param entity           the entity
+	 * @return all associations fields
+	 */
+	private List<String> getAllAssociationsFields(ResourceMetadata
+			resourceMetadata, PersistentEntity<?, ?> entity) {
+		List<String> associationsFields = new ArrayList<>();
+		entity.doWithAssociations((SimpleAssociationHandler) association -> {
+			PersistentProperty<?> property = association.getInverse();
+			ResourceMapping mapping = resourceMetadata.getMappingFor(property);
+			String fieldName = mapping.getRel().value();
+			associationsFields.add(fieldName);
+		});
+		return associationsFields;
+	}
+
+	/**
 	 * Gets ignored fields.
 	 *
 	 * @param resourceMetadata the resource metadata
 	 * @param entity           the entity
 	 * @return the ignored fields
 	 */
-	private Set<String> getIgnoredFields(ResourceMetadata
+	private List<String> getIgnoredFields(ResourceMetadata
 			resourceMetadata, PersistentEntity<?, ?> entity) {
-		Set<String> ignoredFields = new HashSet<>();
+		List<String> ignoredFields = new ArrayList<>();
 		if (entity != null && entity.getIdProperty() != null) {
 			String idField = Objects.requireNonNull(entity.getIdProperty()).getName();
 			ignoredFields.add(idField);

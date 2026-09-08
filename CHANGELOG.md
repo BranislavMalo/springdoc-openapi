@@ -5,6 +5,62 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- The MCP dashboard no longer pre-fills the OAuth2 token endpoint, client id and client secret. The form shows hints instead, and warns when the token endpoint is not HTTPS
+
+## [3.1.1] - 2026-09-06
+
+### Security
+
+- [GHSA-6f5m-mhjg-qwxq](https://github.com/springdoc/springdoc-openapi/security/advisories/GHSA-6f5m-mhjg-qwxq) – MCP tool callbacks do not encode path parameters, allowing request retargeting
+- [GHSA-4v2q-56v7-2cpw](https://github.com/springdoc/springdoc-openapi/security/advisories/GHSA-4v2q-56v7-2cpw) – MCP transport, admin and dashboard endpoints are exposed by default
+- [GHSA-m4cg-mhpg-rh2r](https://github.com/springdoc/springdoc-openapi/security/advisories/GHSA-m4cg-mhpg-rh2r) – MCP audit events record credentials and request/response bodies without redaction
+- [GHSA-5f9r-4mc4-qh3c](https://github.com/springdoc/springdoc-openapi/security/advisories/GHSA-5f9r-4mc4-qh3c) – Unbounded MCP pending-confirmation store allows memory exhaustion
+- [GHSA-jcgg-59c8-w4wh](https://github.com/springdoc/springdoc-openapi/security/advisories/GHSA-jcgg-59c8-w4wh) – MCP request context in a `ThreadLocal` can leak headers between concurrent WebFlux requests
+- [GHSA-rhhx-6j8h-8cvw](https://github.com/springdoc/springdoc-openapi/security/advisories/GHSA-rhhx-6j8h-8cvw) – Unbounded per-locale OpenAPI cache allows memory exhaustion via `Accept-Language`
+- [GHSA-c925-vm88-mpp9](https://github.com/springdoc/springdoc-openapi/security/advisories/GHSA-c925-vm88-mpp9) – Scalar starters trust client-supplied forwarded headers and render from a shared mutable bean
+- [CVE-2026-75838](https://github.com/advisories/GHSA-748c-f84h-hp2v) – Cross-site scripting in the DOMPurify bundled with swagger-ui, addressed by upgrading swagger-ui to **5.32.14**
+
+### Added
+
+- #3340 – Describe `JsonNullable` values without their Java wrapper
+- #3325 – Manage the swagger artifacts in `springdoc-openapi-bom`, so that modules holding only the annotations stay in lockstep
+- #3321 – Add `springdoc.login-endpoint.username-example` and `springdoc.login-endpoint.password-example` to document the Spring Security login endpoint
+
+### Changed
+
+- **MCP is now opt-in.** Set `springdoc.ai.mcp.enabled=true`, and `springdoc.ai.mcp.dashboard-enabled=true` for the dashboard
+- **The Scalar starters no longer register forwarded-header handling.** Set `server.forward-headers-strategy=framework` (or `native`) behind a trusted proxy
+- Add `springdoc.cache.max-entries` (default `100`) to bound the per-locale OpenAPI cache
+- Add `springdoc.ai.mcp.audit.redact` (default `true`) to mask secrets in MCP audit events
+- Document that the MCP approval flow is a confirmation step, not an authorization control
+- Document the security policy and the release versioning scheme
+- #3351 – `java.time.Duration`, `LocalTime` and `OffsetTime` are now resolved by swagger-core instead of being forced to a bare `string`, so they carry a `format` (`duration` and `partial-time` respectively for the first two)
+- A property whose type only implements `Set` indirectly (`LinkedHashSet`, `TreeSet`, …) is now described with `uniqueItems: true`, following [swagger-api/swagger-core#5265](https://github.com/swagger-api/swagger-core/pull/5265)
+- Upgrade swagger-core to version **2.2.55**
+- Upgrade swagger-ui to version **5.32.14**
+
+### Fixed
+
+- #3328, #3337 – `/v3/api-docs` fails with a `NullPointerException` when spring-hateoas is on the classpath without `HateoasProperties`
+- #3314 – `Json Processing Exception occurred` is logged for every constrained parameter whose schema is not a `JsonSchema`
+- #3317 – An injected `HttpHeaders` parameter is described as a schema
+- #3332 – The properties a Kotlin entity inherits from an `@Embeddable` are missing from the Spring Data REST schemas
+- #3320 – `@Order` and `Ordered` ignored when applying customizers
+- #3319 – A `Page` nested in another schema is not replaced by `PagedModel`
+- #3313 – Springdoc auto-configurations rely on unspecified auto-configuration ordering
+- #3331 – Validation annotations declared inside `Optional` parameters are dropped
+- #3322 – Validation annotations on a container's type argument leak between parameters
+- #3315 – An OAS 3.1 `JsonSchema` cannot be cloned through JSON
+- #3300 – TYPE_USE annotations on `@ParameterObject` fields are not passed along
+- #3341 – Stabilize Spring Data `Sort` and `Pageable` schema property order
+- #3338 – Kotlin nullability interpretation of the `Any?` type
+- #3136 – A Spring Data REST association to a non-exported entity expands its `@EmbeddedId` and `@MapsId` fields recursively in the response schemas
+- The Spring Data REST response post-processing rewrote an association property in place, so the `…Response` refs could leak into the schema shared with the request body representation
+
 ## [3.1.0] - 2026-07-31
 
 ### Added

@@ -38,6 +38,7 @@ import org.springdoc.core.properties.SpringDocConfigProperties.ApiDocs.OpenApiVe
 import org.springdoc.core.utils.Constants;
 
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -55,6 +56,7 @@ import static org.springdoc.core.utils.Constants.SPRINGDOC_ENABLED;
  */
 @Lazy(false)
 @Configuration(proxyBeanMethods = false)
+@AutoConfigureAfter(SpringDocConfiguration.class)
 @ConfigurationProperties(prefix = Constants.SPRINGDOC_PREFIX)
 @ConditionalOnProperty(name = SPRINGDOC_ENABLED, matchIfMissing = true)
 @ConditionalOnBean(SpringDocConfiguration.class)
@@ -165,6 +167,11 @@ public class SpringDocConfigProperties {
 	 * The Show login endpoint.
 	 */
 	private boolean showLoginEndpoint;
+
+	/**
+	 * The login endpoint configuration.
+	 */
+	private LoginEndpoint loginEndpoint = new LoginEndpoint();
 
 	/**
 	 * Allow for pre-loading OpenAPI
@@ -745,6 +752,24 @@ public class SpringDocConfigProperties {
 	 */
 	public void setShowLoginEndpoint(boolean showLoginEndpoint) {
 		this.showLoginEndpoint = showLoginEndpoint;
+	}
+
+	/**
+	 * Gets login endpoint.
+	 *
+	 * @return the login endpoint
+	 */
+	public LoginEndpoint getLoginEndpoint() {
+		return loginEndpoint;
+	}
+
+	/**
+	 * Sets login endpoint.
+	 *
+	 * @param loginEndpoint the login endpoint
+	 */
+	public void setLoginEndpoint(LoginEndpoint loginEndpoint) {
+		this.loginEndpoint = loginEndpoint;
 	}
 
 	/**
@@ -1587,10 +1612,26 @@ public class SpringDocConfigProperties {
 	 * @author bnasslahsen
 	 */
 	public static class Cache {
+
+		/**
+		 * The default maximum number of cached OpenAPI documents.
+		 */
+		private static final int DEFAULT_MAX_ENTRIES = 100;
+
 		/**
 		 * The Disabled.
 		 */
 		private boolean disabled;
+
+		/**
+		 * The maximum number of OpenAPI descriptions to keep in the cache. One entry is
+		 * cached per requested locale, so this bounds the memory an untrusted caller can
+		 * make the cache consume by varying the {@code Accept-Language} header. The least
+		 * recently used entry is evicted once the limit is reached. A non-positive value
+		 * falls back to the default of {@value #DEFAULT_MAX_ENTRIES} rather than meaning
+		 * "unlimited". Narrow it further with {@code springdoc.allowed-locales}.
+		 */
+		private int maxEntries = DEFAULT_MAX_ENTRIES;
 
 		/**
 		 * Is disabled boolean.
@@ -1608,6 +1649,24 @@ public class SpringDocConfigProperties {
 		 */
 		public void setDisabled(boolean disabled) {
 			this.disabled = disabled;
+		}
+
+		/**
+		 * Gets max entries.
+		 *
+		 * @return the max entries
+		 */
+		public int getMaxEntries() {
+			return maxEntries;
+		}
+
+		/**
+		 * Sets max entries.
+		 *
+		 * @param maxEntries the max entries
+		 */
+		public void setMaxEntries(int maxEntries) {
+			this.maxEntries = maxEntries > 0 ? maxEntries : DEFAULT_MAX_ENTRIES;
 		}
 	}
 
@@ -1894,6 +1953,63 @@ public class SpringDocConfigProperties {
 		@Override
 		public int hashCode() {
 			return Objects.hash(group);
+		}
+	}
+
+	/**
+	 * The type Login endpoint.
+	 * <p>
+	 * These settings only take effect when the login endpoint is exposed, i.e. when
+	 * {@code springdoc.show-login-endpoint=true}. Otherwise, they are ignored.
+	 */
+	public static class LoginEndpoint {
+
+		/**
+		 * The example value for the username field of the login request body.
+		 * Only applied when {@code springdoc.show-login-endpoint=true}.
+		 */
+		private String usernameExample;
+
+		/**
+		 * The example value for the password field of the login request body.
+		 * Only applied when {@code springdoc.show-login-endpoint=true}.
+		 */
+		private String passwordExample;
+
+		/**
+		 * Gets username example.
+		 *
+		 * @return the username example
+		 */
+		public String getUsernameExample() {
+			return usernameExample;
+		}
+
+		/**
+		 * Sets username example.
+		 *
+		 * @param usernameExample the username example
+		 */
+		public void setUsernameExample(String usernameExample) {
+			this.usernameExample = usernameExample;
+		}
+
+		/**
+		 * Gets password example.
+		 *
+		 * @return the password example
+		 */
+		public String getPasswordExample() {
+			return passwordExample;
+		}
+
+		/**
+		 * Sets password example.
+		 *
+		 * @param passwordExample the password example
+		 */
+		public void setPasswordExample(String passwordExample) {
+			this.passwordExample = passwordExample;
 		}
 	}
 }
