@@ -1215,6 +1215,16 @@ public class SpringDocConfigProperties {
 		 */
 		private PolymorphicConverter polymorphicConverter = new PolymorphicConverter();
 
+		/**
+		 * The Kotlin nullable property customizer.
+		 */
+		private KotlinNullablePropertyCustomizer kotlinNullablePropertyCustomizer = new KotlinNullablePropertyCustomizer();
+
+		/**
+		 * The Java nullable property customizer.
+		 */
+		private JavaNullablePropertyCustomizer javaNullablePropertyCustomizer = new JavaNullablePropertyCustomizer();
+
 
 		/**
 		 * Gets deprecating converter.
@@ -1271,6 +1281,104 @@ public class SpringDocConfigProperties {
 		}
 
 		/**
+		 * Gets Kotlin nullable property customizer.
+		 *
+		 * @return the Kotlin nullable property customizer
+		 */
+		public KotlinNullablePropertyCustomizer getKotlinNullablePropertyCustomizer() {
+			return kotlinNullablePropertyCustomizer;
+		}
+
+		/**
+		 * Sets Kotlin nullable property customizer.
+		 *
+		 * @param kotlinNullablePropertyCustomizer the Kotlin nullable property customizer
+		 */
+		public void setKotlinNullablePropertyCustomizer(KotlinNullablePropertyCustomizer kotlinNullablePropertyCustomizer) {
+			this.kotlinNullablePropertyCustomizer = kotlinNullablePropertyCustomizer;
+		}
+
+		/**
+		 * Gets Java nullable property customizer.
+		 *
+		 * @return the Java nullable property customizer
+		 */
+		public JavaNullablePropertyCustomizer getJavaNullablePropertyCustomizer() {
+			return javaNullablePropertyCustomizer;
+		}
+
+		/**
+		 * Sets Java nullable property customizer.
+		 *
+		 * @param javaNullablePropertyCustomizer the Java nullable property customizer
+		 */
+		public void setJavaNullablePropertyCustomizer(JavaNullablePropertyCustomizer javaNullablePropertyCustomizer) {
+			this.javaNullablePropertyCustomizer = javaNullablePropertyCustomizer;
+		}
+
+		/**
+		 * The Kotlin nullable property customizer.
+		 *
+		 * @author bnasslahsen
+		 */
+		public static class KotlinNullablePropertyCustomizer {
+
+			/**
+			 * Mark the schema properties of nullable Kotlin types (Type?) as nullable.
+			 */
+			private boolean enabled = true;
+
+			/**
+			 * Is enabled boolean.
+			 *
+			 * @return the boolean
+			 */
+			public boolean isEnabled() {
+				return enabled;
+			}
+
+			/**
+			 * Sets enabled.
+			 *
+			 * @param enabled the enabled
+			 */
+			public void setEnabled(boolean enabled) {
+				this.enabled = enabled;
+			}
+		}
+
+		/**
+		 * The Java nullable property customizer.
+		 *
+		 * @author bnasslahsen
+		 */
+		public static class JavaNullablePropertyCustomizer {
+
+			/**
+			 * Mark the schema properties of Java models annotated with @Nullable as nullable.
+			 */
+			private boolean enabled;
+
+			/**
+			 * Is enabled boolean.
+			 *
+			 * @return the boolean
+			 */
+			public boolean isEnabled() {
+				return enabled;
+			}
+
+			/**
+			 * Sets enabled.
+			 *
+			 * @param enabled the enabled
+			 */
+			public void setEnabled(boolean enabled) {
+				this.enabled = enabled;
+			}
+		}
+
+		/**
 		 * The type Deprecating converter.
 		 *
 		 * @author bnasslashen
@@ -1312,6 +1420,34 @@ public class SpringDocConfigProperties {
 			private boolean enabled;
 
 			/**
+			 * Emit discovered polymorphic oneOf schemas as reusable component refs.
+			 */
+			private boolean oneOfAsRef;
+
+			/**
+			 * Suffix appended to the base schema name when emitting oneOf unions as component refs.
+			 */
+			private String oneOfRefSuffix = "Variant";
+
+			/**
+			 * Gets one of ref suffix.
+			 *
+			 * @return the one of ref suffix
+			 */
+			public String getOneOfRefSuffix() {
+				return oneOfRefSuffix;
+			}
+
+			/**
+			 * Sets one of ref suffix.
+			 *
+			 * @param oneOfRefSuffix the one of ref suffix
+			 */
+			public void setOneOfRefSuffix(String oneOfRefSuffix) {
+				this.oneOfRefSuffix = oneOfRefSuffix;
+			}
+
+			/**
 			 * Is enabled boolean.
 			 *
 			 * @return the boolean
@@ -1327,6 +1463,24 @@ public class SpringDocConfigProperties {
 			 */
 			public void setEnabled(boolean enabled) {
 				this.enabled = enabled;
+			}
+
+			/**
+			 * Is one of as ref boolean.
+			 *
+			 * @return the boolean
+			 */
+			public boolean isOneOfAsRef() {
+				return oneOfAsRef;
+			}
+
+			/**
+			 * Sets one of as ref.
+			 *
+			 * @param oneOfAsRef the one of as ref
+			 */
+			public void setOneOfAsRef(boolean oneOfAsRef) {
+				this.oneOfAsRef = oneOfAsRef;
 			}
 		}
 

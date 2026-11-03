@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.springdoc</groupId>
 	<artifactId>springdoc-openapi</artifactId>
-	<version>3.1.2-SNAPSHOT</version>
+	<version>3.2.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Spring openapi documentation</name>
 	<description>Spring openapi documentation</description>
@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.1.0</version>
+		<version>4.1.2</version>
 	</parent>
 
 	<licenses>
@@ -60,17 +60,14 @@
 		</central-publishing-maven-plugin.version>
 		<flatten-maven-plugin.version>1.5.0</flatten-maven-plugin.version>
 		<swagger-api.version>2.2.55</swagger-api.version>
-		<swagger-ui.version>5.32.14</swagger-ui.version>
+		<swagger-ui.version>5.34.0</swagger-ui.version>
 		<gmavenplus-plugin.version>1.13.1</gmavenplus-plugin.version>
 		<jjwt.version>0.9.1</jjwt.version>
 		<jackson-databind-nullable.version>0.2.8</jackson-databind-nullable.version>
 		<therapi-runtime-javadoc.version>0.15.0</therapi-runtime-javadoc.version>
-		<spring-cloud-function.version>5.0.0-M1</spring-cloud-function.version>
-		<spring-security-oauth2-authorization-server.version>2.0.0-M2
-		</spring-security-oauth2-authorization-server.version>
-		<scalar.version>0.5.55</scalar.version>
-		<spring-ai.version>2.0.0</spring-ai.version>
-		<mcp-sdk.version>2.0.0</mcp-sdk.version>
+		<spring-cloud-function.version>5.0.5</spring-cloud-function.version>
+		<scalar.version>0.6.83</scalar.version>
+		<spring-ai.version>2.0.1</spring-ai.version>
 		<skipPublishing>false</skipPublishing>
 		<skip.npm>true</skip.npm>
 		<frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
@@ -109,17 +106,6 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-			<!-- spring Security Oauth2 Authorization Server-->
-			<dependency>
-				<groupId>org.springframework.security</groupId>
-				<artifactId>spring-security-oauth2-authorization-server</artifactId>
-				<version>${spring-security-oauth2-authorization-server.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.scalar.maven</groupId>
-				<artifactId>scalar</artifactId>
-				<version>${scalar.version}</version>
-			</dependency>
 			<dependency>
 				<groupId>com.github.therapi</groupId>
 				<artifactId>therapi-runtime-javadoc</artifactId>
@@ -134,12 +120,6 @@
 				<groupId>com.scalar.maven</groupId>
 				<artifactId>scalar-core</artifactId>
 				<version>${scalar.version}</version>
-			</dependency>
-			<!-- MCP SDK -->
-			<dependency>
-				<groupId>io.modelcontextprotocol.sdk</groupId>
-				<artifactId>mcp-core</artifactId>
-				<version>${mcp-sdk.version}</version>
 			</dependency>
 			<!-- Spring AI -->
 			<dependency>

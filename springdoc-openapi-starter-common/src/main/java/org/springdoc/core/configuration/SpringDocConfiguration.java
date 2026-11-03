@@ -65,6 +65,7 @@ import org.springdoc.core.customizers.DataRestRouterOperationCustomizer;
 import org.springdoc.core.customizers.DelegatingMethodParameterCustomizer;
 import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
 import org.springdoc.core.customizers.GlobalOperationCustomizer;
+import org.springdoc.core.customizers.JavaNullablePropertyCustomizer;
 import org.springdoc.core.customizers.OpenApiBuilderCustomizer;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springdoc.core.customizers.OperationCustomizer;
@@ -132,12 +133,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.DeferredResult;
+import org.springframework.web.context.request.async.WebAsyncTask;
 
 import static org.springdoc.core.utils.Constants.GLOBAL_OPEN_API_CUSTOMIZER;
 import static org.springdoc.core.utils.Constants.SPRINGDOC_DEPRECATING_CONVERTER_ENABLED;
 import static org.springdoc.core.utils.Constants.SPRINGDOC_ENABLED;
 import static org.springdoc.core.utils.Constants.SPRINGDOC_ENABLE_EXTRA_SCHEMAS;
 import static org.springdoc.core.utils.Constants.SPRINGDOC_EXPLICIT_OBJECT_SCHEMA;
+import static org.springdoc.core.utils.Constants.SPRINGDOC_JAVA_NULLABLE_PROPERTY_CUSTOMIZER_ENABLED;
 import static org.springdoc.core.utils.Constants.SPRINGDOC_POLYMORPHIC_CONVERTER_ENABLED;
 import static org.springdoc.core.utils.Constants.SPRINGDOC_SCHEMA_RESOLVE_PROPERTIES;
 import static org.springdoc.core.utils.Constants.SPRINGDOC_SHOW_ACTUATOR;
@@ -163,7 +166,8 @@ public class SpringDocConfiguration {
 		getConfig().replaceWithSchema(ObjectNode.class, new ObjectSchema())
 				.replaceWithClass(Charset.class, String.class)
 				.addResponseWrapperToIgnore(DeferredResult.class)
-				.addResponseWrapperToIgnore(Future.class);
+				.addResponseWrapperToIgnore(Future.class)
+				.addResponseWrapperToIgnore(WebAsyncTask.class);
 	}
 
 	/**
@@ -296,15 +300,31 @@ public class SpringDocConfiguration {
 	/**
 	 * Polymorphic model converter polymorphic model converter.
 	 *
-	 * @param objectMapperProvider the object mapper provider
+	 * @param objectMapperProvider      the object mapper provider
+	 * @param springDocConfigProperties the spring doc config properties
 	 * @return the polymorphic model converter
 	 */
 	@Bean
 	@ConditionalOnMissingBean
 	@ConditionalOnProperty(name = SPRINGDOC_POLYMORPHIC_CONVERTER_ENABLED, matchIfMissing = true)
 	@Lazy(false)
-	PolymorphicModelConverter polymorphicModelConverter(ObjectMapperProvider objectMapperProvider) {
-		return new PolymorphicModelConverter(objectMapperProvider);
+	PolymorphicModelConverter polymorphicModelConverter(ObjectMapperProvider objectMapperProvider, SpringDocConfigProperties springDocConfigProperties) {
+		SpringDocConfigProperties.ModelConverters.PolymorphicConverter polymorphicConverter = springDocConfigProperties.getModelConverters().getPolymorphicConverter();
+		return new PolymorphicModelConverter(objectMapperProvider, polymorphicConverter.isOneOfAsRef(), polymorphicConverter.getOneOfRefSuffix());
+	}
+
+	/**
+	 * Java nullable property customizer model converter.
+	 *
+	 * @param objectMapperProvider the object mapper provider
+	 * @return the Java nullable property customizer model converter
+	 */
+	@Bean
+	@ConditionalOnMissingBean
+	@ConditionalOnProperty(name = SPRINGDOC_JAVA_NULLABLE_PROPERTY_CUSTOMIZER_ENABLED, havingValue = "true")
+	@Lazy(false)
+	JavaNullablePropertyCustomizer javaNullablePropertyCustomizer(ObjectMapperProvider objectMapperProvider) {
+		return new JavaNullablePropertyCustomizer(objectMapperProvider);
 	}
 
 	/**

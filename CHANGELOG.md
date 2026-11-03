@@ -5,11 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.2.0] - 2026-10-24
+
+### Added
+
+- #3370 – A `ParameterCustomizer` can read the type-use annotations of a parameter, including the ones declared on the value wrapped in an `Optional`, such as `Optional<@MyAnnotation Foo>`
+- #3382 – Mark the Java properties annotated with `@Nullable` (JSpecify, Spring, JSR-305) as nullable in their schema, including `$ref` and `oneOf` properties. Opt-in with `springdoc.model-converters.java-nullable-property-customizer.enabled=true`
+- #3390 – Add `springdoc.model-converters.polymorphic-converter.one-of-as-ref` to emit the polymorphic `oneOf` unions as reusable component schemas, named after the parent schema with the suffix set by `springdoc.model-converters.polymorphic-converter.one-of-ref-suffix` (`Variant` by default)
+- #3388 – Register the MCP tools with a `McpStatelessSyncServer`, for the STATELESS protocol
 
 ### Changed
 
 - The MCP dashboard no longer pre-fills the OAuth2 token endpoint, client id and client secret. The form shows hints instead, and warns when the token endpoint is not HTTPS
+- #3354 – The default API version is only listed in the header or query parameter of the operations that serve it: a handler method mapped to it, or one without a version
+- #3360 – The properties of Spring Data `PagedModel` and its `PageMetadata` are now marked as required, as they are always serialized
+- #3361 – The `amount` and `currency` properties of `MonetaryAmount` are now marked as required
+- #3359 – Upgrade Scalar to version **0.6.83**. The first tag is now open by default, and the links to models changed from `#model/name` to `#models/Name`
+- #3383 – Upgrade Spring AI to version **2.0.1**. The MCP SDK version is now the one required by Spring AI
+- Upgrade spring-boot to version **4.1.2**
+- Upgrade swagger-ui to version **5.34.0**
+- Upgrade spring-cloud-function to version **5.0.5**
+- Use the spring-security-oauth2-authorization-server version managed by Spring Boot (**7.1.2**) instead of 2.0.0-M2
+
+### Fixed
+
+- #3352 – A `@ResponseStatus` on a controller class is now applied to the responses of its operations
+- #3355 – An injected `WebSession` parameter is no longer documented as a query parameter in WebFlux applications
+- #3354 – `/v3/api-docs` no longer fails when an API version parameter declares `@Schema(allowableValues)`
+- #3364 – The application no longer fails to start when Spring HATEOAS is on the classpath without a `LinkRelationProvider` bean
+- #3368 – A `WebAsyncTask` return type is now unwrapped, so its response is described by its result type
+- #3377 – A JSpecify `@Nullable` on a controller method parameter now makes its schema nullable
+- #3381 – A nullable Kotlin property described by a `oneOf` schema, such as a sealed class, is now documented as nullable
+- #3387 – Scalar's own integration works again with the Swagger UI and API-only starters: only the Springdoc Scalar starters replace it
+- #3373 – springdoc no longer lifts Jackson 2 above the version managed by Spring Boot in Gradle builds
 
 ## [3.1.1] - 2026-09-06
 
@@ -38,7 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `springdoc.ai.mcp.audit.redact` (default `true`) to mask secrets in MCP audit events
 - Document that the MCP approval flow is a confirmation step, not an authorization control
 - Document the security policy and the release versioning scheme
-- #3351 – `java.time.Duration`, `LocalTime` and `OffsetTime` are now resolved by swagger-core instead of being forced to a bare `string`, so they carry a `format` (`duration` and `partial-time` respectively for the first two)
+- #3351 – `java.time.Duration`, `LocalTime` and `OffsetTime` are now resolved by swagger-core instead of being forced to a bare `string`, so they carry a `format`: `duration`, `time-local` and `time` respectively (`partial-time` for `LocalTime` after `PrimitiveType.enablePartialTime()`)
 - A property whose type only implements `Set` indirectly (`LinkedHashSet`, `TreeSet`, …) is now described with `uniqueItems: true`, following [swagger-api/swagger-core#5265](https://github.com/swagger-api/swagger-core/pull/5265)
 - Upgrade swagger-core to version **2.2.55**
 - Upgrade swagger-ui to version **5.32.14**
